@@ -18,7 +18,25 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-int main(int argc, const char * argv[]) {
+#include <string>
+
+int fetchLastMessageIndex(const std::string& emailBody) {
+    std::string indexString;
+    std::string startMark = "(MESSAGES ";
+    auto markStartPosition = emailBody.find(startMark);
+    auto markEndPosition = emailBody.find(")", markStartPosition);
+    for (int i = 0; i < markEndPosition - markStartPosition - startMark.length(); i++) {
+        indexString.append(emailBody.substr(markStartPosition + i + startMark.length(), 1));
+    }
+    
+    return atoi(indexString.c_str());
+}
+
+bool checkEmailSubjectAndDate(const std::string& emailBody) {
+    return true;
+}
+
+std::string lastEmailBody() {
     OPENSSL_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
     SSL_library_init(); // Initialize OpenSSL's SSL libraries
     SSL_load_error_strings(); // Load SSL error strings
@@ -50,9 +68,31 @@ int main(int argc, const char * argv[]) {
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     std::cout << "Answer: " << tmp << std::endl;
 
-    BIO_puts(bio, "tag FETCH 2 (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n");
+    int lasMessageIndex = fetchLastMessageIndex(tmp);
+    
+    std::string mask = "tag FETCH %i (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n";
+    char buffer[256] = {0};
+    std::snprintf(buffer, 256, mask.c_str(), lasMessageIndex);
+    BIO_puts(bio, buffer);
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     std::cout << "Answer: " << tmp << std::endl;
+
+    BIO_free(bio);
+    SSL_CTX_free(ctx);
+    
+    return tmp;
+}
+
+int fetchVerificationCode() {
+    const std::string emailBody = lastEmailBody();
+    int code = 6565;
+    
+    return code;
+}
+
+int main(int argc, const char * argv[]) {
+    int verificationCode = fetchVerificationCode();
+    
     
     return 0;
 }
