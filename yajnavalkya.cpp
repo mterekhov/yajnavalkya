@@ -48,22 +48,11 @@ int main(int argc, const char * argv[]) {
 
     BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
+    std::cout << "Answer: " << tmp << std::endl;
 
-    BIO_puts(bio, "tag FETCH 1 (FLAGS BODY[HEADER.FIELDS (FROM DATE SUBJECT)])\r\n");
+    BIO_puts(bio, "tag FETCH 2 (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     std::cout << "Answer: " << tmp << std::endl;
-    
-    int i = 0;
-    int bytesRecv = 0;
-    do { //There I am trying to receive all message
-        std::cout << "i=" << i << std::endl;
-        memset(tmp, 0, sizeof(tmp));
-        bytesRecv = BIO_read(bio, tmp, sizeof(tmp)); //I am expecting to get 0 in the end of message, but instead function blocks
-        std::cout << "Bytes received: " << bytesRecv  << std::endl;
-        std::cout << "Answer: " << tmp << std::endl;
-        system("pause");
-    }
-    while(bytesRecv);
     
     return 0;
 }
