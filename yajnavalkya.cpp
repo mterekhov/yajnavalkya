@@ -18,10 +18,10 @@
 #include "cpp/plaintextmessage.hpp"
 
 int main(int argc, const char * argv[]) {
-    jed_utils::cpp::OpportunisticSecureSMTPClient client("disroot.org", 993);
-    client.setCredentials(jed_utils::cpp::Credential("Yajnavalkya@disroot.org", "cf1f3QUNc"));
+    jed_utils::cpp::OpportunisticSecureSMTPClient client("disroot.org", 587);
+    client.setCredentials(jed_utils::cpp::Credential("yajnavalkya@disroot.org", "cf1f3QUNc"));
     try    {
-        jed_utils::cpp::PlaintextMessage msg(jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Test Address Display"),
+        jed_utils::cpp::PlaintextMessage msg(jed_utils::cpp::MessageAddress("yajnavalkya@disroot.org", "Test Address Display"),
                              { jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Another Address display") },
                              "This is a test (Subject)",
                              "Hello\nHow are you?");
