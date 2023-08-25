@@ -1,0 +1,3 @@
+[submodule "third/CPP-SMTPClient-library"]
+	path = third/CPP-SMTPClient-library
+	url = git@github.com:jeremydumais/CPP-SMTPClient-library.git
