@@ -19,7 +19,5 @@ set(CMAKE_CXX_STANDARD 20)
 include(GNUInstallDirs)
 
 add_executable(${PROJECT_NAME} yajnavalkya.cpp)
-include_directories(third/CPP-SMTPClient-library/src)
-add_subdirectory(third/CPP-SMTPClient-library)
 
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC smtpclient ${OPENSSL_LIBRARIES} ${OPENSSL_SSL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${OPENSSL_LIBRARIES} ${OPENSSL_SSL_LIBRARIES})

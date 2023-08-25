@@ -14,56 +14,48 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#include "cpp/opportunisticsecuresmtpclient.hpp"
-#include "cpp/plaintextmessage.hpp"
+#include <openssl/bio.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 
 int main(int argc, const char * argv[]) {
-    BIO *bio;
-    SSL *ssl;
-    SSL_CTX *ctx;
-    int bytesRecv = 0;
-    
-    
-    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
+    OPENSSL_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
     SSL_library_init(); // Initialize OpenSSL's SSL libraries
     SSL_load_error_strings(); // Load SSL error strings
     ERR_load_BIO_strings(); // Load BIO error strings
     OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
     
-    ctx = SSL_CTX_new(SSLv23_client_method());
-    bio = BIO_new_ssl_connect(ctx);
+    SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
+    BIO *bio = BIO_new_ssl_connect(ctx);
+    SSL *ssl;
     BIO_get_ssl(bio, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     
-    BIO_set_conn_hostname(bio, "imap.gmail.com:993");
+    BIO_set_conn_hostname(bio, "disroot.org:993");
     BIO_do_connect(bio);
     
-    char tmp[2000];
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, 1000) << std::endl; // Receive 68 bytes (server welcome string)
-    
-    std::cout << std::endl << "LOGIN:" << std::endl;
-    BIO_puts(bio, "tag LOGIN user@gmail.com password\r\n");
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
-    std::cout << "Answer: " << tmp << std::endl;
-    std::cout << std::endl << "LIST:" << std::endl;
+    char tmp[2048] = {0};
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
+
+    BIO_puts(bio, "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n");
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
+
     BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
-    std::cout << "Answer: " << tmp << std::endl;
-    std::cout << std::endl << "INBOX:" << std::endl;
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
+
     BIO_puts(bio, "tag select INBOX\r\n");
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
-    std::cout << "Answer: " << tmp << std::endl;
-    std::cout << std::endl << "STATUS:" << std::endl;
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
+
     BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
+
+    BIO_puts(bio, "tag FETCH 1 (FLAGS BODY[HEADER.FIELDS (FROM DATE SUBJECT)])\r\n");
+    BIO_read(bio, tmp, sizeof(tmp) - 1);
     std::cout << "Answer: " << tmp << std::endl;
     
-    BIO_puts(bio, "tag FETCH 4224 BODY[]\r\n");
-    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
-    std::cout << "Answer: " << tmp << std::endl;
-    
-    do{ //There I am trying to receive all message
+    int i = 0;
+    int bytesRecv = 0;
+    do { //There I am trying to receive all message
         std::cout << "i=" << i << std::endl;
         memset(tmp, 0, sizeof(tmp));
         bytesRecv = BIO_read(bio, tmp, sizeof(tmp)); //I am expecting to get 0 in the end of message, but instead function blocks
@@ -72,213 +64,91 @@ int main(int argc, const char * argv[]) {
         system("pause");
     }
     while(bytesRecv);
+    
     return 0;
 }
 
-void sendingEmail() {
-    jed_utils::cpp::OpportunisticSecureSMTPClient client("disroot.org", 587);
-    client.setCredentials(jed_utils::cpp::Credential("yajnavalkya@disroot.org", "cf1f3QUNc"));
-    try    {
-        jed_utils::cpp::PlaintextMessage msg(jed_utils::cpp::MessageAddress("yajnavalkya@disroot.org", "Test Address Display"),
-                                             { jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Another Address display") },
-                                             "This is a test (Subject)",
-                                             "Hello\nHow are you?");
-        
-        int err_no = client.sendMail(msg);
-        if (err_no != 0) {
-            std::cerr << client.getCommunicationLog() << '\n';
-            std::string errorMessage = client.getErrorMessage(err_no);
-            std::cerr << "An error occurred: " << errorMessage
-            << " (error no: " << err_no << ")" << '\n';
-            return 1;
-        }
-        std::cout << client.getCommunicationLog() << '\n';
-        std::cout << "Operation completed!" << std::endl;
-    }
-    catch (std::invalid_argument &err) {
-        std::cerr << err.what() << std::endl;
-    }
-}
-
-void customSocket() {
-    const int port = 25;
-    const std::string hostAddress = "smtp.yandex.ru";
-    int fd;
-    socklen_t n;
-    
-    int smtpSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (smtpSocket == -1) {
-        printf(">>> failed to create new socket\n");
-        return;
-    }
-    
-    struct sockaddr_in socketAddress;
-    memset(&socketAddress, 0, sizeof(socketAddress));
-    socketAddress.sin_family = AF_INET;
-    socketAddress.sin_port = htons(port);
-    
-    struct hostent *host = gethostbyname(hostAddress.c_str());
-    socketAddress.sin_addr.s_addr = *(host->h_addr);
-    
-    printf(">>> connecting to server ...\n");
-    if (connect(smtpSocket, (struct sockaddr *) &socketAddress, sizeof(socketAddress)) == -1) {
-        printf(">>> failed to connect to server\n");
-        return;
-    }
-    printf(">>> connection successfull\n");
-    
-    char buffer[1024] = {0};
-    int bytesReceived = recv(smtpSocket, buffer, sizeof(buffer), 0);
-}
-
-//// Insist on at least Winsock v1.1
-//const VERSION_MAJOR = 1;
-//const VERSION_MINOR = 1;
-//
-//#define CRLF "\r\n"                 // carriage-return/line feed pair
-//
-//void ShowUsage(void)
+//bool RequestQueue(const char* serverName)
 //{
-//  std::cout << "Usage: SENDMAIL mailserv to_addr from_addr messagefile" << std::endl
-//       << "Example: SENDMAIL smtp.myisp.com rcvr@elsewhere.com my_id@mydomain.com message.txt" << std::endl;
+//    SOCKET      hSocket = INVALID_SOCKET;
+//    char        receiveBuf[512];
+//    ZeroMemory(receiveBuf,512);
+//    char        requestBuf[512];
+//    ZeroMemory(requestBuf,512);
+//    sockaddr_in sockAddr = {0};
+//    bool        bSuccess = true;
 //
-//  exit(1);
-//}
+//    //SSL
+//    SSL* ssl;
+//    SSL_CTX* ctx;
 //
-//// Basic error checking for send() and recv() functions
-//void Check(int iStatus, char *szFunction)
-//{
-//  if((iStatus != SOCKET_ERROR) && (iStatus))
-//    return;
+//    try
+//    {
+//        //Look up hostname and fill sockaddr_in structure
+//        cout<< "Looking up hostname "<<serverName<<"...";
+//        FillSockAddr(&sockAddr,serverName,IMAP_SERVER_PORT);
+//        cout<< "found.\n";
 //
-//  cerr << "Error during call to " << szFunction << ": " << iStatus << " - " << GetLastError() << std::endl;
-//}
+//        //creating socket
+//        cout<<"Creating socket..";
+//        if((hSocket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) == INVALID_SOCKET)
+//            throw exception("could not create socket!");
+//        cout<<"created.\n";
 //
-//int main(int argc, char *argv[])
-//{
-//  int         iProtocolPort        = 0;
-//  char        szSmtpServerName[64] = "";
-//  char        szToAddr[64]         = "";
-//  char        szFromAddr[64]       = "";
-//  char        szBuffer[4096]       = "";
-//  char        szLine[255]          = "";
-//  char        szMsgLine[255]       = "";
-//  SOCKET      hServer;
-//  WSADATA     WSData;
-//  LPHOSTENT   lpHostEntry;
-//  LPSERVENT   lpServEntry;
-//  SOCKADDR_IN SockAddr;
+//            //Connect to server
+//        cout<<"Attempting to connect to "<< inet_ntoa(sockAddr.sin_addr)
+//            <<":"<<IMAP_SERVER_PORT<<" ...";
+//        if(connect(hSocket,(sockaddr*)(&sockAddr),sizeof(sockAddr))!= 0)
+//            throw exception("could not connect!");
 //
-//  // Check for four command-line args
-//  if(argc != 5)
-//    ShowUsage();
+//        cout<<"connected\n";
 //
-//  // Load command-line args
-//  lstrcpy(szSmtpServerName, argv[1]);
-//  lstrcpy(szToAddr, argv[2]);
-//  lstrcpy(szFromAddr, argv[3]);
+//        ctx = SSL_CTX_new(SSLv23_client_method());
+//        if(!ctx)
+//            throw exception("SSL_CTX_new error");
 //
-//  // Create input stream for reading email message file
-//  ifstream MsgFile(argv[4]);
+//        ssl = SSL_new(ctx);
+//        SSL_CTX_free(ctx);
+//        if(!ssl)
+//            throw exception("ssl initializing error");
 //
-//  // Attempt to intialize WinSock (1.1 or later)
-//  if(WSAStartup(MAKEWORD(VERSION_MAJOR, VERSION_MINOR), &WSData))
-//  {
-//    std::cout << "Cannot find Winsock v" << VERSION_MAJOR << "." << VERSION_MINOR << " or later!" << std::endl;
+//        SSL_set_fd(ssl,hSocket);
+//        if(SSL_connect(ssl) != 1)
+//            throw exception("SSL_connect error");
 //
-//    return 1;
-//  }
+//        int reqLen;
+//        int retLen;
+//        cout<<"==============\n";
+//        cout<<"====begin=====\n";
+//        cout<<"==============\n";
 //
-//  // Lookup email server's IP address.
-//  lpHostEntry = gethostbyname(szSmtpServerName);
-//  if(!lpHostEntry)
-//  {
-//    std::cout << "Cannot find SMTP mail server " << szSmtpServerName << std::endl;
+//        retLen = SSL_read(ssl,receiveBuf,sizeof(receiveBuf));
+//        if(retLen<0)
+//            throw exception("SSL_read error.");
+//        cout<<"S: "<<receiveBuf;
 //
-//    return 1;
-//  }
+//        strcpy(requestBuf,"a001 CAPABILITY");
+//        reqLen = strlen(requestBuf);
+//        SSL_write(ssl,requestBuf,reqLen);
+//        cout<<"C: "<<requestBuf<<endl;
 //
-//  // Create a TCP/IP socket, no specific protocol
-//  hServer = socket(PF_INET, SOCK_STREAM, 0);
-//  if(hServer == INVALID_SOCKET)
-//  {
-//    std::cout << "Cannot open mail server socket" << std::endl;
+//        ZeroMemory(receiveBuf,sizeof(receiveBuf));
+//        retLen = SSL_read(ssl,receiveBuf,sizeof(receiveBuf));
+//        if(retLen<0)
+//            throw exception("SSL_read error.");
 //
-//    return 1;
-//  }
+//        cout<<"S: "<<receiveBuf;
+//    }
+//    catch(exception e)
+//    {
+//        cout<<"Error : "<<e.what()<<endl;
+//    }
+//    if(hSocket != INVALID_SOCKET)
+//    {
+//        SSL_shutdown(ssl);
+//        closesocket(hSocket);
+//        SSL_free(ssl);
+//    }
 //
-//  // Get the mail service port
-//  lpServEntry = getservbyname("mail", 0);
-//
-//  // Use the SMTP default port if no other port is specified
-//  if(!lpServEntry)
-//    iProtocolPort = htons(IPPORT_SMTP);
-//  else
-//    iProtocolPort = lpServEntry->s_port;
-//
-//  // Setup a Socket Address structure
-//  SockAddr.sin_family = AF_INET;
-//  SockAddr.sin_port   = iProtocolPort;
-//  SockAddr.sin_addr   = *((LPIN_ADDR)*lpHostEntry->h_addr_list);
-//
-//  // Connect the Socket
-//  if(connect(hServer, (PSOCKADDR) &SockAddr, sizeof(SockAddr)))
-//  {
-//    std::cout << "Error connecting to Server socket" << std::endl;
-//
-//    return 1;
-//  }
-//
-//  // Receive initial response from SMTP server
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() Reply");
-//
-//  // Send HELO server.com
-//  sprintf(szMsgLine, "HELO %s%s", szSmtpServerName, CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() HELO");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() HELO");
-//
-//  // Send MAIL FROM: <sender@mydomain.com>
-//  sprintf(szMsgLine, "MAIL FROM:<%s>%s", szFromAddr, CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() MAIL FROM");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() MAIL FROM");
-//
-//  // Send RCPT TO: <receiver@domain.com>
-//  sprintf(szMsgLine, "RCPT TO:<%s>%s", szToAddr, CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() RCPT TO");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() RCPT TO");
-//
-//  // Send DATA
-//  sprintf(szMsgLine, "DATA%s", CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() DATA");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() DATA");
-//
-//  // Send all lines of message body (using supplied text file)
-//  MsgFile.getline(szLine, sizeof(szLine));             // Get first line
-//
-//  do         // for each line of message text...
-//  {
-//    sprintf(szMsgLine, "%s%s", szLine, CRLF);
-//    Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() message-line");
-//    MsgFile.getline(szLine, sizeof(szLine)); // get next line.
-//  } while(MsgFile.good());
-//
-//  // Send blank line and a period
-//  sprintf(szMsgLine, "%s.%s", CRLF, CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() end-message");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() end-message");
-//
-//  // Send QUIT
-//  sprintf(szMsgLine, "QUIT%s", CRLF);
-//  Check(send(hServer, szMsgLine, strlen(szMsgLine), 0), "send() QUIT");
-//  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() QUIT");
-//
-//  // Report message has been sent
-//  std::cout << "Sent " << argv[4] << " as email message to " << szToAddr << std::endl;
-//
-//  // Close server socket and prepare to exit.
-//  closesocket(hServer);
-//
-//  WSACleanup();
-//
-//  return 0;
+//    return bSuccess;
 //}
