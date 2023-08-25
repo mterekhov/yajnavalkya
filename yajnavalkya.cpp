@@ -16,15 +16,73 @@
 
 #include "cpp/opportunisticsecuresmtpclient.hpp"
 #include "cpp/plaintextmessage.hpp"
+#include <openssl/ssl.h>
 
 int main(int argc, const char * argv[]) {
+    BIO *bio;
+    SSL *ssl;
+    SSL_CTX *ctx;
+    int bytesRecv = 0;
+    
+    
+    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
+    SSL_library_init(); // Initialize OpenSSL's SSL libraries
+    SSL_load_error_strings(); // Load SSL error strings
+    ERR_load_BIO_strings(); // Load BIO error strings
+    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
+    
+    ctx = SSL_CTX_new(SSLv23_client_method());
+    bio = BIO_new_ssl_connect(ctx);
+    BIO_get_ssl(bio, &ssl);
+    SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+    
+    BIO_set_conn_hostname(bio, "imap.gmail.com:993");
+    BIO_do_connect(bio);
+    
+    char tmp[2000];
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, 1000) << std::endl; // Receive 68 bytes (server welcome string)
+    
+    std::cout << std::endl << "LOGIN:" << std::endl;
+    BIO_puts(bio, "tag LOGIN user@gmail.com password\r\n");
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    std::cout << "Answer: " << tmp << std::endl;
+    std::cout << std::endl << "LIST:" << std::endl;
+    BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    std::cout << "Answer: " << tmp << std::endl;
+    std::cout << std::endl << "INBOX:" << std::endl;
+    BIO_puts(bio, "tag select INBOX\r\n");
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    std::cout << "Answer: " << tmp << std::endl;
+    std::cout << std::endl << "STATUS:" << std::endl;
+    BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    std::cout << "Answer: " << tmp << std::endl;
+    
+    BIO_puts(bio, "tag FETCH 4224 BODY[]\r\n");
+    std::cout << "Bytes received: " << BIO_read(bio, tmp, sizeof(tmp) - 1) << std::endl;
+    std::cout << "Answer: " << tmp << std::endl;
+    
+    do{ //There I am trying to receive all message
+        std::cout << "i=" << i << std::endl;
+        memset(tmp, 0, sizeof(tmp));
+        bytesRecv = BIO_read(bio, tmp, sizeof(tmp)); //I am expecting to get 0 in the end of message, but instead function blocks
+        std::cout << "Bytes received: " << bytesRecv  << std::endl;
+        std::cout << "Answer: " << tmp << std::endl;
+        system("pause");
+    }
+    while(bytesRecv);
+    return 0;
+}
+
+void sendingEmail() {
     jed_utils::cpp::OpportunisticSecureSMTPClient client("disroot.org", 587);
     client.setCredentials(jed_utils::cpp::Credential("yajnavalkya@disroot.org", "cf1f3QUNc"));
     try    {
         jed_utils::cpp::PlaintextMessage msg(jed_utils::cpp::MessageAddress("yajnavalkya@disroot.org", "Test Address Display"),
-                             { jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Another Address display") },
-                             "This is a test (Subject)",
-                             "Hello\nHow are you?");
+                                             { jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Another Address display") },
+                                             "This is a test (Subject)",
+                                             "Hello\nHow are you?");
         
         int err_no = client.sendMail(msg);
         if (err_no != 0) {
@@ -40,8 +98,6 @@ int main(int argc, const char * argv[]) {
     catch (std::invalid_argument &err) {
         std::cerr << err.what() << std::endl;
     }
-    
-    return 0;
 }
 
 void customSocket() {
@@ -83,8 +139,8 @@ void customSocket() {
 //
 //void ShowUsage(void)
 //{
-//  cout << "Usage: SENDMAIL mailserv to_addr from_addr messagefile" << endl
-//       << "Example: SENDMAIL smtp.myisp.com rcvr@elsewhere.com my_id@mydomain.com message.txt" << endl;
+//  std::cout << "Usage: SENDMAIL mailserv to_addr from_addr messagefile" << std::endl
+//       << "Example: SENDMAIL smtp.myisp.com rcvr@elsewhere.com my_id@mydomain.com message.txt" << std::endl;
 //
 //  exit(1);
 //}
@@ -95,7 +151,7 @@ void customSocket() {
 //  if((iStatus != SOCKET_ERROR) && (iStatus))
 //    return;
 //
-//  cerr << "Error during call to " << szFunction << ": " << iStatus << " - " << GetLastError() << endl;
+//  cerr << "Error during call to " << szFunction << ": " << iStatus << " - " << GetLastError() << std::endl;
 //}
 //
 //int main(int argc, char *argv[])
@@ -128,7 +184,7 @@ void customSocket() {
 //  // Attempt to intialize WinSock (1.1 or later)
 //  if(WSAStartup(MAKEWORD(VERSION_MAJOR, VERSION_MINOR), &WSData))
 //  {
-//    cout << "Cannot find Winsock v" << VERSION_MAJOR << "." << VERSION_MINOR << " or later!" << endl;
+//    std::cout << "Cannot find Winsock v" << VERSION_MAJOR << "." << VERSION_MINOR << " or later!" << std::endl;
 //
 //    return 1;
 //  }
@@ -137,7 +193,7 @@ void customSocket() {
 //  lpHostEntry = gethostbyname(szSmtpServerName);
 //  if(!lpHostEntry)
 //  {
-//    cout << "Cannot find SMTP mail server " << szSmtpServerName << endl;
+//    std::cout << "Cannot find SMTP mail server " << szSmtpServerName << std::endl;
 //
 //    return 1;
 //  }
@@ -146,7 +202,7 @@ void customSocket() {
 //  hServer = socket(PF_INET, SOCK_STREAM, 0);
 //  if(hServer == INVALID_SOCKET)
 //  {
-//    cout << "Cannot open mail server socket" << endl;
+//    std::cout << "Cannot open mail server socket" << std::endl;
 //
 //    return 1;
 //  }
@@ -168,7 +224,7 @@ void customSocket() {
 //  // Connect the Socket
 //  if(connect(hServer, (PSOCKADDR) &SockAddr, sizeof(SockAddr)))
 //  {
-//    cout << "Error connecting to Server socket" << endl;
+//    std::cout << "Error connecting to Server socket" << std::endl;
 //
 //    return 1;
 //  }
@@ -217,7 +273,7 @@ void customSocket() {
 //  Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() QUIT");
 //
 //  // Report message has been sent
-//  cout << "Sent " << argv[4] << " as email message to " << szToAddr << endl;
+//  std::cout << "Sent " << argv[4] << " as email message to " << szToAddr << std::endl;
 //
 //  // Close server socket and prepare to exit.
 //  closesocket(hServer);
