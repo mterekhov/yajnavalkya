@@ -14,7 +14,37 @@
 #include <unistd.h>
 #include <netdb.h>
 
+#include "cpp/opportunisticsecuresmtpclient.hpp"
+#include "cpp/plaintextmessage.hpp"
+
 int main(int argc, const char * argv[]) {
+    jed_utils::cpp::OpportunisticSecureSMTPClient client("disroot.org", 993);
+    client.setCredentials(jed_utils::cpp::Credential("Yajnavalkya@disroot.org", "cf1f3QUNc"));
+    try    {
+        jed_utils::cpp::PlaintextMessage msg(jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Test Address Display"),
+                             { jed_utils::cpp::MessageAddress("m.terekhov@icloud.com", "Another Address display") },
+                             "This is a test (Subject)",
+                             "Hello\nHow are you?");
+        
+        int err_no = client.sendMail(msg);
+        if (err_no != 0) {
+            std::cerr << client.getCommunicationLog() << '\n';
+            std::string errorMessage = client.getErrorMessage(err_no);
+            std::cerr << "An error occurred: " << errorMessage
+            << " (error no: " << err_no << ")" << '\n';
+            return 1;
+        }
+        std::cout << client.getCommunicationLog() << '\n';
+        std::cout << "Operation completed!" << std::endl;
+    }
+    catch (std::invalid_argument &err) {
+        std::cerr << err.what() << std::endl;
+    }
+    
+    return 0;
+}
+
+void customSocket() {
     const int port = 25;
     const std::string hostAddress = "smtp.yandex.ru";
     int fd;
@@ -23,7 +53,7 @@ int main(int argc, const char * argv[]) {
     int smtpSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (smtpSocket == -1) {
         printf(">>> failed to create new socket\n");
-        return 0;
+        return;
     }
     
     struct sockaddr_in socketAddress;
@@ -37,19 +67,12 @@ int main(int argc, const char * argv[]) {
     printf(">>> connecting to server ...\n");
     if (connect(smtpSocket, (struct sockaddr *) &socketAddress, sizeof(socketAddress)) == -1) {
         printf(">>> failed to connect to server\n");
-        return 0;
+        return;
     }
     printf(">>> connection successfull\n");
-
+    
     char buffer[1024] = {0};
     int bytesReceived = recv(smtpSocket, buffer, sizeof(buffer), 0);
-
-//    char hello[256] = {0};
-//    send(smtpSocket, hello, strlen(hello), 0);
-//    printf("Hello message sent\n");
-//    int valread = read(smtpSocket, buffer, 1024);
-    
-    return 0;
 }
 
 //// Insist on at least Winsock v1.1
