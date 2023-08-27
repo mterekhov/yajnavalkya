@@ -20,6 +20,25 @@
 
 #include <string>
 
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
+
+std::string recognizeCaptcha(const std::string& filename) {
+	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
+	if (tesseract->Init(NULL, "eng")) {
+		printf("Tessract failed to init");
+		return "";
+	}
+	Pix *image = pixRead(filename.c_str());
+	tesseract->SetImage(image);
+	std::string result = tesseract->GetUTF8Text();
+
+	tesseract->End();
+	pixDestroy(&image);
+
+	return result;
+}
+
 int fetchLastMessageIndex(const std::string& emailBody) {
     std::string indexString;
     std::string startMark = "(MESSAGES ";
@@ -93,7 +112,7 @@ int fetchVerificationCode() {
 int main(int argc, const char * argv[]) {
     int verificationCode = fetchVerificationCode();
     
-    
+    printf("text recognized <%s>\n", recognizeCaptcha("/pub/captcha.jpeg").c_str());
     return 0;
 }
 
