@@ -45,7 +45,7 @@ void YVHTTPRequestService::receiveVerificationCode() {
 }
     
 std::string YVHTTPRequestService::sendVerificationCode(const std::string& verificationCode) {
-    YVHTTPRequest startRequest = {"/russian/book_appointment.php", "", GET};
+    YVHTTPRequest startRequest = {"/russian/appointment_family.php", "", GET};
     sendRequest(startRequest);
     return "";
 }
@@ -170,27 +170,24 @@ int YVHTTPRequestService::connectToServer(char *szServerName, int portNum) {
 }
 
 int YVHTTPRequestService::getHeaderLength(char *content) {
-    const char *srchStr1 = "\r\n\r\n", *srchStr2 = "\n\r\n\r";
-    char *findPos;
-    int ofset = -1;
+    const char *srchStr1 = "\r\n\r\n";
+    const char *srchStr2 = "\n\r\n\r";
+    int offset = -1;
 
-    findPos = strstr(content, srchStr1);
-    if (findPos != NULL)
-    {
-        ofset = findPos - content;
-        ofset += strlen(srchStr1);
+    char *findPos = strstr(content, srchStr1);
+    if (findPos != NULL) {
+        offset = findPos - content;
+        offset += strlen(srchStr1);
     }
-
-    else
-    {
+    else {
         findPos = strstr(content, srchStr2);
-        if (findPos != NULL)
-        {
-            ofset = findPos - content;
-            ofset += strlen(srchStr2);
+        if (findPos != NULL) {
+            offset = findPos - content;
+            offset += strlen(srchStr2);
         }
     }
-    return ofset;
+    
+    return offset;
 }
 
 char *YVHTTPRequestService::readUrl2(char *szUrl, long &bytesReturnedOut, char **headerOut) {
@@ -213,17 +210,12 @@ char *YVHTTPRequestService::readUrl2(char *szUrl, long &bytesReturnedOut, char *
     int conn = connectToServer((char*)server.c_str(), 80);
 
     ///////////// step 2, send GET request /////////////
-    sprintf(tmpBuffer, "GET %s HTTP/1.0", filepath.c_str());
-    strcpy(sendBuffer, tmpBuffer);
-    strcat(sendBuffer, "\r\n");
-    sprintf(tmpBuffer, "Host: %s", server.c_str());
-    strcat(sendBuffer, tmpBuffer);
-    strcat(sendBuffer, "\r\n");
-    strcat(sendBuffer, "\r\n");
-    send(conn, sendBuffer, strlen(sendBuffer), 0);
+    std::string finalHTTP = "GET";
+    finalHTTP += filepath + " HTTP/1.1" + "\r\n";
+    finalHTTP += "Host: " + hostName + "\r\n";
+    send(conn, finalHTTP.c_str(), finalHTTP.length(), 0);
 
-//    SetWindowText(edit3Hwnd, sendBuffer);
-    printf("Buffer being sent:\n%s", sendBuffer);
+    printf("Buffer being sent:\n%s", finalHTTP.c_str());
 
     ///////////// step 3 - get received bytes ////////////////
     // Receive until the peer closes the connection
@@ -242,6 +234,7 @@ char *YVHTTPRequestService::readUrl2(char *szUrl, long &bytesReturnedOut, char *
         totalBytesRead += thisReadSize;
     }
 
+    std::string completeResponse = tmpResult;
     headerLen = getHeaderLength(tmpResult);
     long contenLen = totalBytesRead - headerLen;
     result = new char[contenLen + 1];
