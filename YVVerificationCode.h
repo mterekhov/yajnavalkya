@@ -5,8 +5,8 @@
 //  Created by cipher on 28.08.2023.
 //
 
-#ifndef YVVerificationCode_hpp
-#define YVVerificationCode_hpp
+#ifndef YVVerificationCode_h
+#define YVVerificationCode_h
 
 #include <stdio.h>
 #include <string>

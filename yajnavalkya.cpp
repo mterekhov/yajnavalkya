@@ -10,6 +10,7 @@
 #include <leptonica/allheaders.h>
 
 #include "YVVerificationCode.h"
+#include "YVHTTPRequestService.h"
 
 std::string recognizeCaptcha(const std::string& filename) {
 	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
@@ -28,6 +29,9 @@ std::string recognizeCaptcha(const std::string& filename) {
 }
 
 int main(int argc, const char * argv[]) {
+    spcYajnaValkya::YVHTTPRequestService httpService;
+    httpService.receiveVerificationCode();
+    
     spcYajnaValkya::YVVerificationCode verificationCode;
     verificationCode.fetchVerificationCode();
     
