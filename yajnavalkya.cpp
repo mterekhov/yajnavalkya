@@ -30,12 +30,12 @@ std::string recognizeCaptcha(const std::string& filename) {
 
 int main(int argc, const char * argv[]) {
     spcYajnaValkya::YVHTTPRequestService httpService;
-    httpService.receiveVerificationCode();
+    httpService.sendHTTPSRequest("");
     
-    spcYajnaValkya::YVVerificationCode verificationCode;
-    verificationCode.fetchVerificationCode();
-    
-    printf("text recognized <%s>\n", recognizeCaptcha("/Users/cipher/Desktop/captcha/captcha.jpeg").c_str());
+//    spcYajnaValkya::YVVerificationCode verificationCode;
+//    verificationCode.fetchVerificationCode();
+//    
+//    printf("text recognized <%s>\n", recognizeCaptcha("/Users/cipher/Desktop/captcha/captcha.jpeg").c_str());
     return 0;
 }
 

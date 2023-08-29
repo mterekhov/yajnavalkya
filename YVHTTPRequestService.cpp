@@ -21,6 +21,86 @@
 
 namespace spcYajnaValkya {
 
+std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& link) {
+    int newSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (newSocket == -1) {
+        return "";
+    }
+
+    struct hostent *hp;
+    unsigned int addr;
+    if (inet_addr(hostName.c_str()) == INADDR_NONE) {
+        hp = gethostbyname(hostName.c_str());
+    }
+    else {
+        addr = inet_addr(hostName.c_str());
+        hp = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+    }
+
+    if (hp == NULL) {
+        close(newSocket);
+        return "";
+    }
+
+    struct sockaddr_in server;
+    server.sin_addr.s_addr = *((unsigned long*)hp->h_addr);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(443);
+
+    if (connect(newSocket,(struct sockaddr*)&server, sizeof(server))) {
+        close(newSocket);
+        return "";
+    }
+
+    OPENSSL_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
+    SSL_library_init(); // Initialize OpenSSL's SSL libraries
+    SSL_load_error_strings(); // Load SSL error strings
+    ERR_load_BIO_strings(); // Load BIO error strings
+    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
+    SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
+    if (!ctx) {
+        printf("SSL_CTX_new error\n");
+        return "";
+    }
+    
+    SSL *ssl = SSL_new(ctx);
+    if (!ssl) {
+        printf("ssl initializing error\n");
+        return "";
+    }
+    
+//    int ssl_scoket = SSL_get_fd(ssl);
+    SSL_set_fd(ssl, newSocket);
+    
+    if (SSL_connect(ssl) != 1) {
+        printf("SSL_connect error");
+        return "";
+    }
+    
+    std::string httpRequest = "GET /russian/appointment_family.php HTTP/1.0\r\n";
+    httpRequest += "Host: blsrussiaportugal.com\r\n";
+    int let = SSL_write(ssl, httpRequest.c_str(), httpRequest.length());
+    
+    const int bufSize = 512;
+    char readBuffer[bufSize] = {0};
+    int totalBytesRead = 0;
+    std::string httpResponse = "";
+    int readBytes = 0;
+    while(readBytes >= 0) {
+        memset(readBuffer, 0, bufSize);
+        readBytes = SSL_read(ssl, readBuffer, bufSize);
+        printf("received <%s>\n", readBuffer);
+        totalBytesRead += readBytes;
+        httpResponse += readBuffer;
+    }
+
+    SSL_shutdown(ssl);
+    close(newSocket);
+    SSL_free(ssl);
+    
+    return httpResponse;
+}
+
 void YVHTTPRequestService::receiveVerificationCode() {
     const int bufLen = 1024;
     char *szUrl = "https://blsrussiaportugal.com/russian/appointment_family.php"; //    "http://stackoverflow.com";
@@ -210,12 +290,17 @@ char *YVHTTPRequestService::readUrl2(char *szUrl, long &bytesReturnedOut, char *
     int conn = connectToServer((char*)server.c_str(), 80);
 
     ///////////// step 2, send GET request /////////////
-    std::string finalHTTP = "GET";
-    finalHTTP += filepath + " HTTP/1.1" + "\r\n";
-    finalHTTP += "Host: " + hostName + "\r\n";
-    send(conn, finalHTTP.c_str(), finalHTTP.length(), 0);
+    sprintf(tmpBuffer, "GET %s HTTP/1.0", filepath.c_str());
+    strcpy(sendBuffer, tmpBuffer);
+    strcat(sendBuffer, "\r\n");
+    sprintf(tmpBuffer, "Host: %s", server.c_str());
+    strcat(sendBuffer, tmpBuffer);
+    strcat(sendBuffer, "\r\n");
+    strcat(sendBuffer, "\r\n");
+    send(conn, sendBuffer, strlen(sendBuffer), 0);
 
-    printf("Buffer being sent:\n%s", finalHTTP.c_str());
+//    SetWindowText(edit3Hwnd, sendBuffer);
+    printf("Buffer being sent:\n%s", sendBuffer);
 
     ///////////// step 3 - get received bytes ////////////////
     // Receive until the peer closes the connection

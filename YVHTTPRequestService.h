@@ -20,7 +20,8 @@ public:
     /// Send http requests until the stage when verification code sent
     void receiveVerificationCode();
     std::string sendVerificationCode(const std::string& verificationCode);
-    
+    std::string sendHTTPSRequest(const std::string& link);
+
 private:
     const std::string hostName = "blsrussiaportugal.com";
     std::string csrfToken;
