@@ -18,6 +18,7 @@ private:
 
     YVHTTPRequestService httpService;
     
+    std::string parseCSRFToken(const std::string& response);
 public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();

@@ -18,7 +18,13 @@
 
 namespace spcYajnaValkya {
 
-using HTTPParsType = std::map<std::string, std::string>;
+class YVHTTPPar {
+public:
+    std::string key;
+    std::string value;
+};
+
+using HTTPParsType = std::list<YVHTTPPar>;
 
 class YVHTTPRequestService {
 public:
@@ -27,7 +33,7 @@ public:
     ~YVHTTPRequestService();
     
     std::string sendGETRequest(const std::string& link);
-    std::string sendPOSTRequest(const std::string& link, const std::string& body);
+    std::string sendPOSTRequest(const std::string& link, const HTTPParsType& pars);
 
 private:
     const std::string hostName;

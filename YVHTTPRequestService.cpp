@@ -29,8 +29,8 @@ YVHTTPRequestService::~YVHTTPRequestService() {
     
 }
 
-std::string YVHTTPRequestService::sendPOSTRequest(const std::string& link, const std::string& body) {
-    return sendHTTPSRequest("POST", link, HTTPParsType());
+std::string YVHTTPRequestService::sendPOSTRequest(const std::string& link, const HTTPParsType& pars) {
+    return sendHTTPSRequest("POST", link, pars);
 }
 
 std::string YVHTTPRequestService::sendGETRequest(const std::string& link) {
@@ -48,10 +48,12 @@ std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& method,
     
     std::string httpRequest = method + " ";
     httpRequest += link;
-    httpRequest += " HTTP/1.1\r\nHOST: ";
+    httpRequest += " HTTP/1.1\r\nHost: ";
     httpRequest += hostName;
     httpRequest += "\r\n\r\n";
-    httpRequest += generateBody(parsList);
+    if (!parsList.empty()) {
+        httpRequest += generateBody(parsList);
+    }
     
     int err = SSL_write(ssl, httpRequest.c_str(), httpRequest.length());
     
@@ -79,7 +81,7 @@ std::string YVHTTPRequestService::generateBody(const HTTPParsType& parsList) {
     std::string newBody;
 
     for (HTTPParsType::const_iterator iter = parsList.begin(); iter != parsList.end(); iter++) {
-        newBody = iter->first + "=" + iter->second + "&";
+        newBody += iter->key + "=" + iter->value + "&";
     }
     
     newBody.pop_back();
