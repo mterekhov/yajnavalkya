@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <map>
 #include <list>
 #include <openssl/ssl.h>
 
@@ -17,20 +18,27 @@
 
 namespace spcYajnaValkya {
 
+using HTTPParsType = std::map<std::string, std::string>;
+
 class YVHTTPRequestService {
 public:
     
     YVHTTPRequestService(const std::string& host);
     ~YVHTTPRequestService();
     
-    std::string sendHTTPSRequest(const std::string& link);
+    std::string sendGETRequest(const std::string& link);
+    std::string sendPOSTRequest(const std::string& link, const std::string& body);
 
 private:
     const std::string hostName;
     std::string csrfToken;
     
+    std::string generateBody(const HTTPParsType& parsList);
     int connectToServer(const std::string hostAddress);
     SSL *enableSSL(const int socket);
+    std::string sendHTTPSRequest(const std::string& method,
+                                 const std::string& link,
+                                 const HTTPParsType& pars);
 };
 
 };

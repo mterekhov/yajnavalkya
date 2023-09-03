@@ -18,7 +18,7 @@ YVBLSRussiaPortugalAPI::~YVBLSRussiaPortugalAPI() {
 }
 
 void YVBLSRussiaPortugalAPI::receiveVerificationCode() {
-    printf("RESPONSE:\n %s\n", httpService.sendHTTPSRequest("/russian/book_appointment.php").c_str());
+    printf("RESPONSE:\n %s\n", httpService.sendGETRequest("/russian/book_appointment.php").c_str());
 }
 
 std::string YVBLSRussiaPortugalAPI::sendVerificationCode(const std::string& verificationCode) {
