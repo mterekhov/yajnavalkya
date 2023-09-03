@@ -30,7 +30,7 @@ include(GNUInstallDirs)
 
 include_directories(/usr/local/include)
 
-add_executable(${PROJECT_NAME} yajnavalkya.cpp YVVerificationCode.cpp YVHTTPRequestService.cpp)
+add_executable(${PROJECT_NAME} yajnavalkya.cpp YVVerificationCode.cpp YVHTTPRequestService.cpp YVBLSRussiaPortugalAPI.cpp)
 
 if(APPLE)
 	find_library(TESSERACT_LIB tesseract lib)
