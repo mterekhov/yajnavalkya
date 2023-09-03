@@ -10,6 +10,9 @@
 
 #include <stdio.h>
 #include <string>
+#include <list>
+#include <openssl/ssl.h>
+
 #include "YVHTTPRequest.h"
 
 namespace spcYajnaValkya {
@@ -17,22 +20,17 @@ namespace spcYajnaValkya {
 class YVHTTPRequestService {
 public:
     
-    /// Send http requests until the stage when verification code sent
-    void receiveVerificationCode();
-    std::string sendVerificationCode(const std::string& verificationCode);
+    YVHTTPRequestService(const std::string& host);
+    ~YVHTTPRequestService();
+    
     std::string sendHTTPSRequest(const std::string& link);
 
 private:
-    const std::string hostName = "blsrussiaportugal.com";
+    const std::string hostName;
     std::string csrfToken;
     
-    std::string sendRequest(const YVHTTPRequest& request);
-    std::string generateHTTP(const YVHTTPRequest& request);
-    
-    void mParseUrl(char *mUrl, std::string &serverName, std::string &filepath, std::string &filename);
-    int connectToServer(char *szServerName, int portNum);
-    int getHeaderLength(char *content);
-    char *readUrl2(char *szUrl, long &bytesReturnedOut, char **headerOut);
+    int connectToServer(const std::string hostAddress);
+    SSL *enableSSL(const int socket);
 };
 
 };
