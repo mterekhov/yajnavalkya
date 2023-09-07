@@ -7,6 +7,8 @@
 
 #include "YVHTTPRequestService.h"
 
+#include <iomanip>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -21,6 +23,75 @@
 
 namespace spcYajnaValkya {
 
+static std::string url_encode(const std::string &value) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
+        std::string::value_type c = (*i);
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << std::uppercase;
+        escaped << '%' << std::setw(2) << int((unsigned char) c);
+        escaped << std::nouppercase;
+    }
+
+    return escaped.str();
+}
+
+static std::string DecimalToHexadecimal(int dec) {
+    if (dec < 1) return "0";
+
+    int hex = dec;
+    std::string hexStr;
+
+    while (dec > 0)
+    {
+        hex = dec % 16;
+
+        if (hex < 10)
+            hexStr = hexStr.insert(0, std::string(1, (char)(hex + 48)));
+        else
+            hexStr = hexStr.insert(0, std::string(1, (char)(hex + 55)));
+
+        dec /= 16;
+    }
+
+    return hexStr;
+}
+
+static std::string EncodeURL(std::string data) {
+    std::string result;
+
+    for (char c : data)
+    {
+        if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9'))
+        {
+            result += c;
+        }
+        else
+        {
+            result += '%';
+
+            std::string s = DecimalToHexadecimal(c);
+
+            if (s.length() < 2)
+                s = s.insert(0, "0");
+
+            result += s;
+        }
+    }
+
+    return result;
+}
+
 YVHTTPRequestService::YVHTTPRequestService(const std::string& host) : hostName(host) {
     
 }
@@ -29,17 +100,18 @@ YVHTTPRequestService::~YVHTTPRequestService() {
     
 }
 
-std::string YVHTTPRequestService::sendPOSTRequest(const std::string& link, const HTTPParsType& pars) {
-    return sendHTTPSRequest("POST", link, pars);
+std::string YVHTTPRequestService::sendPOSTRequest(const std::string& link, const HTTPParsType& pars, const HTTPParsType& additionalHeaders) {
+    return sendHTTPSRequest("POST", link, pars, additionalHeaders);
 }
 
-std::string YVHTTPRequestService::sendGETRequest(const std::string& link) {
-    return sendHTTPSRequest("GET", link, HTTPParsType());
+std::string YVHTTPRequestService::sendGETRequest(const std::string& link, const HTTPParsType& additionalHeaders) {
+    return sendHTTPSRequest("GET", link, HTTPParsType(), additionalHeaders);
 }
 
 std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& method,
                                                    const std::string& link,
-                                                   const HTTPParsType& parsList) {
+                                                   const HTTPParsType& parsList,
+                                                   const HTTPParsType& additionalHeaders) {
     int socket = connectToServer(hostName);
     if (socket < 0) {
         return "";
@@ -48,16 +120,32 @@ std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& method,
     
     std::string httpRequest = method + " ";
     httpRequest += link;
-    httpRequest += " HTTP/1.1\r\nHost: ";
+    httpRequest += " HTTP/1.1\r\n";
+    httpRequest += "Host: ";
     httpRequest += hostName;
-    httpRequest += "\r\n\r\n";
+    if (!additionalHeaders.empty()) {
+        httpRequest += "\r\n";
+        httpRequest += generateHeaders(additionalHeaders);
+    }
+
     if (!parsList.empty()) {
-        httpRequest += generateBody(parsList);
+        std::string body = generateBody(parsList);
+        char buffer[256] = {0};
+        std::snprintf(buffer, 256, "\r\nContent-Length: %i", body.length());
+        httpRequest += buffer;
+        httpRequest += "\r\n\r\n";
+        httpRequest += body;
+    }
+    else {
+        httpRequest += "\r\n\r\n";
+    }
+    printf("REQUEST:\n%s\n", httpRequest.c_str());
+    int err = SSL_write(ssl, httpRequest.c_str(), httpRequest.length());
+    if (!err) {
+        printf("error while sending");
     }
     
-    int err = SSL_write(ssl, httpRequest.c_str(), httpRequest.length());
-    
-    char buffer[BUFSIZ] = {0};
+    char buffer[BUFSIZ + 1] = {0};
     std::string response = "";
     ssize_t bytes = 1;
     while (bytes > 0) {
@@ -69,12 +157,23 @@ std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& method,
     //  cleanup
     SSL_shutdown(ssl);
     close(socket);
-    printf("socket closed\n");
     SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
     SSL_free(ssl);
     SSL_CTX_free(ctx);
     
     return response;
+}
+
+std::string YVHTTPRequestService::generateHeaders(const HTTPParsType& additionalHeaders) {
+    std::string headersString;
+
+    for (HTTPParsType::const_iterator iter = additionalHeaders.begin(); iter != additionalHeaders.end(); iter++) {
+        headersString += iter->key + ": " + iter->value + "\r\n";
+    }
+    headersString.pop_back();
+    headersString.pop_back();
+
+    return headersString;
 }
 
 std::string YVHTTPRequestService::generateBody(const HTTPParsType& parsList) {
@@ -132,7 +231,6 @@ SSL *YVHTTPRequestService::enableSSL(const int socket) {
         printf(">>> Error creating SSL connection.  err=%x\n", err);
         return NULL;
     }
-    printf(">> SSL connection using %s\n", SSL_get_cipher(newSSL));
     
     return newSSL;
 }

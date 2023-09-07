@@ -15,10 +15,15 @@ namespace spcYajnaValkya {
 class YVBLSRussiaPortugalAPI {
 private:
     const std::string hostName = "blsrussiaportugal.com";
+    std::string phpSession = "";
 
     YVHTTPRequestService httpService;
     
     std::string parseCSRFToken(const std::string& response);
+    std::string parsePHPSessionCookie(const std::string& response);
+    void waitFor(const int seconds);
+    HTTPParsType defaultHeaders();
+
 public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();
