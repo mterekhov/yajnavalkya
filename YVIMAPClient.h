@@ -15,9 +15,17 @@ namespace spcYajnaValkya {
 
 class YVIMAPClient {
 public:
+    YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password);
+    ~YVIMAPClient();
+    
     int fetchVerificationCode();
     
 private:
+    const std::string login;
+    const std::string password;
+    const std::string host;
+    const int port;
+
     int fetchLastMessageIndex(const std::string& emailBody);
     bool checkEmailSubjectAndDate(const std::string& emailBody);
     std::string lastEmailBody();

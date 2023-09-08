@@ -21,6 +21,13 @@
 
 namespace spcYajnaValkya {
 
+YVIMAPClient::YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password) : host(host), port(port), login(login), password(password) {
+}
+
+YVIMAPClient::~YVIMAPClient() {
+    
+}
+
 int YVIMAPClient::fetchLastMessageIndex(const std::string& emailBody) {
     std::string indexString;
     std::string startMark = "(MESSAGES ";
@@ -50,40 +57,49 @@ std::string YVIMAPClient::lastEmailBody() {
     BIO_get_ssl(bio, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     
-    BIO_set_conn_hostname(bio, "disroot.org:993");
+    char buffer[BUFSIZ] = {0};
+    std::snprintf(buffer, BUFSIZ, ":%i", port);
+    std::string hostConnection = host + buffer;
+    BIO_set_conn_hostname(bio, hostConnection.c_str());
     BIO_do_connect(bio);
     
-    char tmp[2048] = {0};
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
     
     std::string request = "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n";
     BIO_puts(bio, request.c_str());
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("RESPONSE:\n%s\n", tmp);
+
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
+    printf("RESPONSE:\n%s\n", buffer);
     
     BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
     
     BIO_puts(bio, "tag select INBOX\r\n");
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
     
     BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("Answer: <%s>", tmp);
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
+    printf("Answer: <%s>", buffer);
     
-    int lasMessageIndex = fetchLastMessageIndex(tmp);
+    int lasMessageIndex = fetchLastMessageIndex(buffer);
     
     std::string mask = "tag FETCH %i (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n";
-    char buffer[256] = {0};
-    std::snprintf(buffer, 256, mask.c_str(), lasMessageIndex);
+    memset(buffer, 0, BUFSIZ);
+    std::snprintf(buffer, BUFSIZ, mask.c_str(), lasMessageIndex);
     BIO_puts(bio, buffer);
-    BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("Answer: <%s>", tmp);
+    memset(buffer, 0, BUFSIZ);
+    BIO_read(bio, buffer, sizeof(buffer));
+    printf("Answer: <%s>", buffer);
 
     BIO_free(bio);
     SSL_CTX_free(ctx);
     
-    return tmp;
+    return buffer;
 }
 
 int YVIMAPClient::fetchVerificationCode() {
