@@ -32,12 +32,10 @@ std::string YVIMAPClient::fetchVerificationCode() {
     time_t mark = time(0);
     
     while ((time(NULL) - mark) < timeArea) {
-        printf("%li> next check initiated\n", time(0));
         const std::string emailBody = lastEmailBody();
         if (checkEmailSubjectAndDate(emailBody)) {
             return fetchOTP(lastEmailBody());
         }
-        printf("%li> check finished\n", time(0));
         YVTools::waitFor(refreshPeriod);
     }
     
@@ -102,19 +100,15 @@ std::string YVIMAPClient::lastEmailBody() {
     
     std::string request = "tag LOGIN " + login + "@" + host + " " + password + "\r\n";
     std::string response = sendRequest(request, bio);
-    printf("RESPONSE:\n%s\n", response.c_str());
     
     request = "tag LIST \"\" \"*\"\r\n";
     response = sendRequest(request, bio);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     request = "tag select INBOX\r\n";
     response = sendRequest(request, bio);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     request = "tag STATUS INBOX (MESSAGES)\r\n";
     response = sendRequest(request, bio);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     int lasMessageIndex = fetchLastMessageIndex(response);
     
@@ -122,7 +116,6 @@ std::string YVIMAPClient::lastEmailBody() {
     memset(buffer, 0, BUFSIZ);
     std::snprintf(buffer, BUFSIZ, mask.c_str(), lasMessageIndex);
     response = sendRequest(buffer, bio);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     BIO_free(bio);
     SSL_CTX_free(ctx);

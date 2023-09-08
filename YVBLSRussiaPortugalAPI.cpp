@@ -36,11 +36,11 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 
 
 bool YVBLSRussiaPortugalAPI::scheduleAppointment() {
-    HTTPParsType headers = defaultHeaders();
+    HTTPHeadersType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
     }
-    std::string response = httpService.sendGETRequest("/russian/appointment_family.php", headers);
+    std::string response = httpService.sendGETRequest("/russian/appointment_family.php", HTTPParsType(), headers);
     return checkFreeSlots(response);
 }
 
@@ -50,6 +50,10 @@ bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
     auto startPosition = htmlBody.find(startMark);
 
     auto markStartPosition = htmlBody.find(startMark);
+    if (markStartPosition == std::string::npos) {
+        printf("YajnaValkya::YVBLSRussiaPortugalAPI: error parsing available dates\n");
+        return false;
+    }
     auto markEndPosition = htmlBody.find(endMark, markStartPosition);
     std::string freeSlots = htmlBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
     if (!freeSlots.empty()) {

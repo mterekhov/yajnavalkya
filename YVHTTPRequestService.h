@@ -23,6 +23,7 @@ public:
 };
 
 using HTTPParsType = std::list<YVHTTPPar>;
+using HTTPHeadersType = std::list<YVHTTPPar>;
 
 class YVHTTPRequestService {
 public:
@@ -30,21 +31,22 @@ public:
     YVHTTPRequestService(const std::string& host);
     ~YVHTTPRequestService();
     
-    std::string sendGETRequest(const std::string& link, const HTTPParsType& additionalHeaders = HTTPParsType());
-    std::string sendPOSTRequest(const std::string& link, const HTTPParsType& pars, const HTTPParsType& additionalHeaders = HTTPParsType());
+    std::string sendGETRequest(const std::string& link, const HTTPParsType& pars = HTTPParsType(), const HTTPHeadersType& additionalHeaders = HTTPHeadersType());
+    std::string sendPOSTRequest(const std::string& link, const HTTPParsType& pars = HTTPParsType(), const HTTPHeadersType& additionalHeaders = HTTPHeadersType());
 
 private:
     const std::string hostName;
     std::string csrfToken;
     
-    std::string generateHeaders(const HTTPParsType& additionalHeaders);
-    std::string generateBody(const HTTPParsType& parsList);
+    std::string generateHeaders(const HTTPHeadersType& additionalHeaders);
+    std::string generatePOSTBody(const HTTPParsType& parsList, const HTTPHeadersType& additionalHeaders);
+    std::string generateGETParsString(const HTTPParsType& parsList);
     int connectToServer(const std::string hostAddress);
     SSL *enableSSL(const int socket);
     std::string sendHTTPSRequest(const std::string& method,
                                  const std::string& link,
                                  const HTTPParsType& pars,
-                                 const HTTPParsType& additionalHeaders);
+                                 const HTTPHeadersType& additionalHeaders);
 };
 
 };
