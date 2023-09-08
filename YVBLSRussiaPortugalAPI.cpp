@@ -17,15 +17,6 @@ YVBLSRussiaPortugalAPI::~YVBLSRussiaPortugalAPI() {
     
 }
 
-void YVBLSRussiaPortugalAPI::waitFor(const int seconds) {
-    time_t mark = time(NULL);
-    while((time(NULL) - mark) < seconds) {
-        
-    }
-    
-    return;
-}
-
 HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
     return {
         {"Content-Type", "application/x-www-form-urlencoded; charset=UTF-8"},
