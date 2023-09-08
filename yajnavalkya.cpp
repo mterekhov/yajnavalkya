@@ -34,10 +34,15 @@ int main(int argc, const char * argv[]) {
     
     spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
     std::string verificationCode = imapClient.fetchVerificationCode();
-    printf("Yajnavalkya: verification code: %s\n", verificationCode.c_str());
+    if (verificationCode.empty()) {
+        printf("Yajnavalkya: verification code was not found in email");
+        return;
+    }
     
-    apiService.checkSchedule();
-//    
+    apiService.requestAppointment(verificationCode);
+    apiService.termsOfUseAgree();
+    apiService.scheduleAppointment();
+//
 //    printf("text recognized <%s>\n", recognizeCaptcha("/Users/cipher/Desktop/captcha/captcha.jpeg").c_str());
     return 0;
 }

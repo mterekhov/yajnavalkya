@@ -22,16 +22,17 @@ private:
     
     std::string parseCSRFToken(const std::string& response);
     std::string parsePHPSessionCookie(const std::string& response);
-    void waitFor(const int seconds);
     HTTPParsType defaultHeaders();
+    bool checkFreeSlots(const std::string& htmlBody);
 
 public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();
 
-    void checkSchedule();
     void requestVerificationCode();
-    std::string sendVerificationCode(const std::string& verificationCode);
+    void requestAppointment(const std::string& otp);
+    void termsOfUseAgree();
+    void scheduleAppointment();
 };
 
 };

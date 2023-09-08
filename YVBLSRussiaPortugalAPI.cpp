@@ -35,8 +35,52 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 }
 
 
-void YVBLSRussiaPortugalAPI::checkSchedule() {
+void YVBLSRussiaPortugalAPI::scheduleAppointment() {
     HTTPParsType headers = defaultHeaders();
+    if (!phpSession.empty()) {
+        headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
+    }
+    std::string response = httpService.sendGETRequest("/russian/appointment_family.php", headers);
+    printf("RESPONSE:\n%s\n", response.c_str());
+    if (checkFreeSlots(response)) {
+        printf("ACHTUNG!!!!\n");
+    }
+}
+
+bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
+    std::string startMark = "var available_dates = [";
+    std::string endMark = "]";
+    auto startPosition = htmlBody.find(startMark);
+
+    auto markStartPosition = htmlBody.find(startMark);
+    auto markEndPosition = htmlBody.find(endMark, markStartPosition);
+    std::string freeSlots = htmlBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
+    if (!freeSlots.empty()) {
+        return true;
+    }
+    
+    return false;
+}
+
+void YVBLSRussiaPortugalAPI::termsOfUseAgree() {
+    HTTPParsType headers = defaultHeaders();
+    if (!phpSession.empty()) {
+        headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
+    }
+    std::string response = httpService.sendPOSTRequest("/russian/book_appointment.php", {
+                                                                                            {"agree", "Agree"}
+                                                                                        },
+                                                       headers);
+    printf("RESPONSE:\n%s\n", response.c_str());
+
+    phpSession = parsePHPSessionCookie(response);
+}
+
+void YVBLSRussiaPortugalAPI::requestAppointment(const std::string& otp) {
+    HTTPParsType headers = defaultHeaders();
+    if (!phpSession.empty()) {
+        headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
+    }
     std::string response = httpService.sendPOSTRequest("/russian/book_appointment.php", {
         {"app_type", "Family"},
         {"member", "3"},
@@ -45,45 +89,46 @@ void YVBLSRussiaPortugalAPI::checkSchedule() {
         {"phone_code", "7"},
         {"phone", "9160861355"},
         {"email", "yajnavalkya%40disroot.org"},
-        {"otp", "1709"},
+        {"otp", otp},
         {"countryID", ""},
         {"tokenvalue", csrfToken},
         {"save", "%D0%9F%D1%80%D0%BE%D0%B4%D0%BE%D0%BB%D0%B6%D0%B8%D1%82%D1%8C"}
-    });
+    }, headers);
     printf("RESPONSE:\n%s\n", response.c_str());
 
     phpSession = parsePHPSessionCookie(response);
-    if (!phpSession.empty()) {
-        headers = defaultHeaders();
-        headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
-    }
-
 }
 
 void YVBLSRussiaPortugalAPI::requestVerificationCode() {
-    HTTPParsType headers = defaultHeaders();
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
     printf("RESPONSE:\n%s\n", response.c_str());
+    
+    //  fetch CSRF token
     csrfToken = parseCSRFToken(response);
     if (csrfToken.empty()) {
         printf(">>> CSRF token not found\n");
         return;
     }
+
+    //  fetch PHPSESSID cookie
     phpSession = parsePHPSessionCookie(response);
+    HTTPParsType headers = defaultHeaders();
     if (!phpSession.empty()) {
-        headers = defaultHeaders();
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
     }
 
     //  request for OTP on email
     printf("//====================================================\n");
     response = httpService.sendPOSTRequest("/russian/ajax.php", {
-        {"gofor", "send_mail_for_vac"},
-        {"email", "yajnavalkya@disroot.org"},
-        {"center_id", "1"},
-        {"token", csrfToken}
-    }, headers);
-    printf("RESPONSE:\n%s\n", response.c_str());
+                                                                        {"gofor", "send_mail_for_vac"},
+                                                                        {"email", "yajnavalkya@disroot.org"},
+                                                                        {"center_id", "1"},
+                                                                        {"token", csrfToken}
+                                                                    },
+                                           headers);
+
+    //  fetch PHPSESSID cookie
+    phpSession = parsePHPSessionCookie(response);
 }
 
 std::string YVBLSRussiaPortugalAPI::parseCSRFToken(const std::string& response) {
