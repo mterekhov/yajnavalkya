@@ -91,7 +91,7 @@ SSL *YVSSLSocket::enableSSL(const int socket) {
     SSL_set_fd(newSSL, socket);
     int err = SSL_connect(newSSL);
     if (err <= 0) {
-        printf("YajnaValkya::YVSSLSocket: error creating SSL connection.  err=%x\n", err);
+        printf("YajnaValkya::YVSSLSocket: error creating SSL connection\n", err);
         return NULL;
     }
     

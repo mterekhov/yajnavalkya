@@ -35,16 +35,13 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 }
 
 
-void YVBLSRussiaPortugalAPI::scheduleAppointment() {
+bool YVBLSRussiaPortugalAPI::scheduleAppointment() {
     HTTPParsType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
     }
     std::string response = httpService.sendGETRequest("/russian/appointment_family.php", headers);
-    printf("RESPONSE:\n%s\n", response.c_str());
-    if (checkFreeSlots(response)) {
-        printf("ACHTUNG!!!!\n");
-    }
+    return checkFreeSlots(response);
 }
 
 bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
@@ -71,7 +68,6 @@ void YVBLSRussiaPortugalAPI::termsOfUseAgree() {
                                                                                             {"agree", "Agree"}
                                                                                         },
                                                        headers);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     phpSession = parsePHPSessionCookie(response);
 }
@@ -94,19 +90,17 @@ void YVBLSRussiaPortugalAPI::requestAppointment(const std::string& otp) {
         {"tokenvalue", csrfToken},
         {"save", "%D0%9F%D1%80%D0%BE%D0%B4%D0%BE%D0%BB%D0%B6%D0%B8%D1%82%D1%8C"}
     }, headers);
-    printf("RESPONSE:\n%s\n", response.c_str());
 
     phpSession = parsePHPSessionCookie(response);
 }
 
 void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
-    printf("RESPONSE:\n%s\n", response.c_str());
     
     //  fetch CSRF token
     csrfToken = parseCSRFToken(response);
     if (csrfToken.empty()) {
-        printf(">>> CSRF token not found\n");
+        printf("YajnaValkya::YVBLSRussiaPortugalAPI: CSRF token not found\n");
         return;
     }
 
@@ -118,7 +112,6 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     }
 
     //  request for OTP on email
-    printf("//====================================================\n");
     response = httpService.sendPOSTRequest("/russian/ajax.php", {
                                                                         {"gofor", "send_mail_for_vac"},
                                                                         {"email", "yajnavalkya@disroot.org"},

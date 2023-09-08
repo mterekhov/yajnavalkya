@@ -13,6 +13,15 @@
 namespace spcYajnaValkya {
 
 class YVBLSRussiaPortugalAPI {
+public:
+    YVBLSRussiaPortugalAPI();
+    ~YVBLSRussiaPortugalAPI();
+
+    void requestVerificationCode();
+    void requestAppointment(const std::string& otp);
+    void termsOfUseAgree();
+    bool scheduleAppointment();
+
 private:
     const std::string hostName = "blsrussiaportugal.com";
     std::string phpSession = "";
@@ -24,15 +33,6 @@ private:
     std::string parsePHPSessionCookie(const std::string& response);
     HTTPParsType defaultHeaders();
     bool checkFreeSlots(const std::string& htmlBody);
-
-public:
-    YVBLSRussiaPortugalAPI();
-    ~YVBLSRussiaPortugalAPI();
-
-    void requestVerificationCode();
-    void requestAppointment(const std::string& otp);
-    void termsOfUseAgree();
-    void scheduleAppointment();
 };
 
 };
