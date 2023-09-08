@@ -29,12 +29,12 @@ std::string recognizeCaptcha(const std::string& filename) {
 }
 
 int main(int argc, const char * argv[]) {
-//    spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
-    time_t timeStamp = time(NULL);
-//    apiService.requestVerificationCode();
+    spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
+    apiService.requestVerificationCode();
     
-    spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc");
-    imapClient.fetchVerificationCode();
+    spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
+    std::string verificationCode = imapClient.fetchVerificationCode();
+    printf("Yajnavalkya: verification code: %s\n", verificationCode.c_str());
 //    
 //    printf("text recognized <%s>\n", recognizeCaptcha("/Users/cipher/Desktop/captcha/captcha.jpeg").c_str());
     return 0;

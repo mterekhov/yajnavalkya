@@ -6,6 +6,7 @@
 //
 
 #include "YVIMAPClient.h"
+#include "YVTools.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -20,7 +21,7 @@
 
 namespace spcYajnaValkya {
 
-YVIMAPClient::YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password) : host(host), port(port), login(login), password(password) {
+YVIMAPClient::YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password, const time_t timeArea) : host(host), port(port), login(login), password(password), timeArea(timeArea) {
 }
 
 YVIMAPClient::~YVIMAPClient() {
@@ -28,33 +29,53 @@ YVIMAPClient::~YVIMAPClient() {
 }
 
 std::string YVIMAPClient::fetchVerificationCode() {
-    const std::string emailBody = lastEmailBody();
-    printf("EMAIL BODY:\n%s\n", emailBody.c_str());
+    time_t mark = time(0);
+    
+    while ((time(NULL) - mark) < timeArea) {
+        printf("%li> next check initiated\n", time(0));
+        const std::string emailBody = lastEmailBody();
+        if (checkEmailSubjectAndDate(emailBody)) {
+            return fetchOTP(lastEmailBody());
+        }
+        printf("%li> check finished\n", time(0));
+        YVTools::waitFor(refreshPeriod);
+    }
+    
+    return "";
+}
+
+bool YVIMAPClient::checkEmailSubjectAndDate(const std::string& emailBody) {
+    std::string startMark = "Date: ";
+    std::string endMark = "\r\n";
+    auto startPosition = emailBody.find(startMark);
+    auto markStartPosition = emailBody.find(startMark);
+    auto markEndPosition = emailBody.find(endMark, markStartPosition);
+    std::string timeDateString = emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
+    struct tm emailTime = {0};
+    strptime(timeDateString.c_str(), "%a, %d %b %Y %H:%M:%S +%z", &emailTime);
+
+    startMark = "From: ";
+    endMark = "\r\n";
+    startPosition = emailBody.find(startMark);
+    markStartPosition = emailBody.find(startMark);
+    markEndPosition = emailBody.find(endMark, markStartPosition);
+    std::string subject = emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
+
+    if (((time(0) - mktime(&emailTime)) < timeArea) && (subject == "BLS <info.portugal@blshelpline.com>")) {
+        return true;
+    }
+
+    return false;
+}
+
+std::string YVIMAPClient::fetchOTP(const std::string emailBody) {
     std::string startMark = "<td colspan=\"5\" style=\"text-align:left\" width=\"50%\">Verification code - ";
     std::string endMark = "<br/></td>";
     auto startPosition = emailBody.find(startMark);
     
     auto markStartPosition = emailBody.find(startMark);
     auto markEndPosition = emailBody.find(endMark, markStartPosition);
-    std::string code = emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
-    
-    return code;
-}
-
-int YVIMAPClient::fetchLastMessageIndex(const std::string& emailBody) {
-    std::string indexString;
-    std::string startMark = "(MESSAGES ";
-    auto markStartPosition = emailBody.find(startMark);
-    auto markEndPosition = emailBody.find(")", markStartPosition);
-    for (int i = 0; i < markEndPosition - markStartPosition - startMark.length(); i++) {
-        indexString.append(emailBody.substr(markStartPosition + i + startMark.length(), 1));
-    }
-    
-    return atoi(indexString.c_str());
-}
-
-bool YVIMAPClient::checkEmailSubjectAndDate(const std::string& emailBody) {
-    return true;
+    return emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
 }
 
 std::string YVIMAPClient::lastEmailBody() {
@@ -107,6 +128,18 @@ std::string YVIMAPClient::lastEmailBody() {
     SSL_CTX_free(ctx);
     
     return response;
+}
+
+int YVIMAPClient::fetchLastMessageIndex(const std::string& emailBody) {
+    std::string indexString;
+    std::string startMark = "(MESSAGES ";
+    auto markStartPosition = emailBody.find(startMark);
+    auto markEndPosition = emailBody.find(")", markStartPosition);
+    for (int i = 0; i < markEndPosition - markStartPosition - startMark.length(); i++) {
+        indexString.append(emailBody.substr(markStartPosition + i + startMark.length(), 1));
+    }
+    
+    return atoi(indexString.c_str());
 }
 
 std::string YVIMAPClient::sendRequest(const std::string& request, BIO *bio) {

@@ -35,6 +35,23 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 }
 
 
+void YVBLSRussiaPortugalAPI::checkSchedule() {
+    HTTPParsType headers = defaultHeaders();
+    std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
+    printf("RESPONSE:\n%s\n", response.c_str());
+    std::string csrfToken = parseCSRFToken(response);
+    if (csrfToken.empty()) {
+        printf(">>> CSRF token not found\n");
+        return;
+    }
+    phpSession = parsePHPSessionCookie(response);
+    if (!phpSession.empty()) {
+        headers = defaultHeaders();
+        headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
+    }
+
+}
+
 void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     HTTPParsType headers = defaultHeaders();
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
@@ -59,10 +76,6 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
         {"token", csrfToken}
     }, headers);
     printf("RESPONSE:\n%s\n", response.c_str());
-}
-
-std::string YVBLSRussiaPortugalAPI::sendVerificationCode(const std::string& verificationCode) {
-    
 }
 
 std::string YVBLSRussiaPortugalAPI::parseCSRFToken(const std::string& response) {

@@ -43,8 +43,8 @@ std::string YVHTTPRequestService::sendHTTPSRequest(const std::string& method,
 
     if (!parsList.empty()) {
         std::string body = generateBody(parsList);
-        char buffer[256] = {0};
-        std::snprintf(buffer, 256, "\r\nContent-Length: %i", body.length());
+        char buffer[BUFSIZ] = {0};
+        std::snprintf(buffer, BUFSIZ, "\r\nContent-Length: %i", body.length());
         httpRequest += buffer;
         httpRequest += "\r\n\r\n";
         httpRequest += body;
