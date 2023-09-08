@@ -44,7 +44,7 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 }
 
 
-void YVBLSRussiaPortugalAPI::receiveVerificationCode() {
+void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     HTTPParsType headers = defaultHeaders();
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
     printf("RESPONSE:\n%s\n", response.c_str());

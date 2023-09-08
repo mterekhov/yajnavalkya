@@ -14,8 +14,6 @@
 #include <list>
 #include <openssl/ssl.h>
 
-#include "YVHTTPRequest.h"
-
 namespace spcYajnaValkya {
 
 class YVHTTPPar {

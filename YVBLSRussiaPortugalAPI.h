@@ -28,7 +28,7 @@ public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();
 
-    void receiveVerificationCode();
+    void requestVerificationCode();
     std::string sendVerificationCode(const std::string& verificationCode);
 };
 
