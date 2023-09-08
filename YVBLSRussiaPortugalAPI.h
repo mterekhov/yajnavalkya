@@ -16,6 +16,7 @@ class YVBLSRussiaPortugalAPI {
 private:
     const std::string hostName = "blsrussiaportugal.com";
     std::string phpSession = "";
+    std::string csrfToken = "";
 
     YVHTTPRequestService httpService;
     

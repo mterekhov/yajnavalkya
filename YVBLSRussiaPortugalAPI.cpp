@@ -37,13 +37,21 @@ HTTPParsType YVBLSRussiaPortugalAPI::defaultHeaders() {
 
 void YVBLSRussiaPortugalAPI::checkSchedule() {
     HTTPParsType headers = defaultHeaders();
-    std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
+    std::string response = httpService.sendPOSTRequest("/russian/book_appointment.php", {
+        {"app_type", "Family"},
+        {"member", "3"},
+        {"centre", "6%231"},
+        {"category", "Normal"},
+        {"phone_code", "7"},
+        {"phone", "9160861355"},
+        {"email", "yajnavalkya%40disroot.org"},
+        {"otp", "1709"},
+        {"countryID", ""},
+        {"tokenvalue", csrfToken},
+        {"save", "%D0%9F%D1%80%D0%BE%D0%B4%D0%BE%D0%BB%D0%B6%D0%B8%D1%82%D1%8C"}
+    });
     printf("RESPONSE:\n%s\n", response.c_str());
-    std::string csrfToken = parseCSRFToken(response);
-    if (csrfToken.empty()) {
-        printf(">>> CSRF token not found\n");
-        return;
-    }
+
     phpSession = parsePHPSessionCookie(response);
     if (!phpSession.empty()) {
         headers = defaultHeaders();
@@ -56,7 +64,7 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     HTTPParsType headers = defaultHeaders();
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
     printf("RESPONSE:\n%s\n", response.c_str());
-    std::string csrfToken = parseCSRFToken(response);
+    csrfToken = parseCSRFToken(response);
     if (csrfToken.empty()) {
         printf(">>> CSRF token not found\n");
         return;
