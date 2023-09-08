@@ -72,19 +72,27 @@ std::string YVIMAPClient::lastEmailBody() {
     BIO_get_ssl(bio, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     
-    char hostAddress[256] = {0};
-    std::snprintf(hostAddress, 256, "%s:%i", host.c_str(), port);
-    BIO_set_conn_hostname(bio, hostAddress);
+    //  connect
+    char tmp[BUFSIZ] = {0};
+    std::snprintf(tmp, BUFSIZ, "%s:%i", host.c_str(), port);
+    BIO_set_conn_hostname(bio, tmp);
     BIO_do_connect(bio);
     
-    char tmp[2048] = {0};
+    memset(tmp, 0, BUFSIZ);
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    
-    char loginMessage[256] = {0};
-    std::snprintf(loginMessage, 256, "tag LOGIN %s@%s %s\r\n", login.c_str(), host.c_str(), password.c_str());
-    BIO_puts(bio, loginMessage);
+    printf("YajnaValkya::YVIMAPClient: RESPONSE:\n%s\n", tmp);
+    printf("//====================================================\n");
+
+    //                   tag LOGIN yajnavalkya@disroot.org cf2f4QUNc
+    //    BIO_puts(bio, "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n");
+    std::string request = "tag LOGIN " + login + "@" + host + " " + password + "\r\n";
+    printf("YajnaValkya::YVIMAPClient: REQUEST:\n%s\n", request.c_str());
+    BIO_puts(bio, request.c_str());
+    memset(tmp, 0, BUFSIZ);
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    
+    printf("YajnaValkya::YVIMAPClient: RESPONSE:\n%s\n", tmp);
+    printf("//====================================================\n");
+
     BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     
