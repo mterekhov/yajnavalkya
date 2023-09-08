@@ -36,7 +36,7 @@ int main(int argc, const char * argv[]) {
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
         printf("Yajnavalkya: verification code was not found in email");
-        return;
+        return 0;
     }
     
     apiService.requestAppointment(verificationCode);
