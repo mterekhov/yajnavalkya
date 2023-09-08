@@ -1,5 +1,5 @@
 //
-//  YVIMAPClient.hpp
+//  YVVerificationCode.hpp
 //  yajnavalkya
 //
 //  Created by cipher on 28.08.2023.
@@ -15,16 +15,9 @@ namespace spcYajnaValkya {
 
 class YVIMAPClient {
 public:
-    YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password);
-    ~YVIMAPClient();
-    std::string fetchVerificationCode(const time_t nearTime);
-
+    int fetchVerificationCode();
+    
 private:
-    const std::string host;
-    const int port;
-    const std::string login;
-    const std::string password;
-
     int fetchLastMessageIndex(const std::string& emailBody);
     bool checkEmailSubjectAndDate(const std::string& emailBody);
     std::string lastEmailBody();

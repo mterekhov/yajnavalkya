@@ -1,5 +1,5 @@
 //
-//  YVIMAPClient.cpp
+//  YVVerificationCode.cpp
 //  yajnavalkya
 //
 //  Created by cipher on 28.08.2023.
@@ -21,31 +21,9 @@
 
 namespace spcYajnaValkya {
 
-YVIMAPClient::YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password) : host(host), port(port), login(login), password(password) {
-    
-}
-
-YVIMAPClient::~YVIMAPClient() {
-    
-}
-
-std::string YVIMAPClient::fetchVerificationCode(const time_t nearTime) {
-    const std::string emailBody = lastEmailBody();
-    printf("EMAIL BODY:\n%s\n", emailBody.c_str());
-    std::string startMark = "<td colspan=\"5\" style=\"text-align:left\" width=\"50%\">Verification code - ";
-    std::string endMark = "<br/></td>";
-    auto startPosition = emailBody.find(startMark);
-    
-    auto markStartPosition = emailBody.find(startMark);
-    auto markEndPosition = emailBody.find(endMark, markStartPosition);
-    std::string code = emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
-    
-    return code;
-}
-
 int YVIMAPClient::fetchLastMessageIndex(const std::string& emailBody) {
     std::string indexString;
-    std::string startMark = "(UNSEEN ";
+    std::string startMark = "(MESSAGES ";
     auto markStartPosition = emailBody.find(startMark);
     auto markEndPosition = emailBody.find(")", markStartPosition);
     for (int i = 0; i < markEndPosition - markStartPosition - startMark.length(); i++) {
@@ -72,36 +50,26 @@ std::string YVIMAPClient::lastEmailBody() {
     BIO_get_ssl(bio, &ssl);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     
-    //  connect
-    char tmp[BUFSIZ] = {0};
-    std::snprintf(tmp, BUFSIZ, "%s:%i", host.c_str(), port);
-    BIO_set_conn_hostname(bio, tmp);
+    BIO_set_conn_hostname(bio, "disroot.org:993");
     BIO_do_connect(bio);
     
-    memset(tmp, 0, BUFSIZ);
+    char tmp[2048] = {0};
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("YajnaValkya::YVIMAPClient: RESPONSE:\n%s\n", tmp);
-    printf("//====================================================\n");
-
-    //                   tag LOGIN yajnavalkya@disroot.org cf2f4QUNc
-    //    BIO_puts(bio, "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n");
-    std::string request = "tag LOGIN " + login + "@" + host + " " + password + "\r\n";
-    printf("YajnaValkya::YVIMAPClient: REQUEST:\n%s\n", request.c_str());
+    
+    std::string request = "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n";
     BIO_puts(bio, request.c_str());
-    memset(tmp, 0, BUFSIZ);
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("YajnaValkya::YVIMAPClient: RESPONSE:\n%s\n", tmp);
-    printf("//====================================================\n");
-
+    printf("RESPONSE:\n%s\n", tmp);
+    
     BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     
     BIO_puts(bio, "tag select INBOX\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
     
-    BIO_puts(bio, "tag STATUS INBOX (UNSEEN)\r\n");
+    BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("Answer: <%s>\n", tmp);
+    printf("Answer: <%s>", tmp);
     
     int lasMessageIndex = fetchLastMessageIndex(tmp);
     
@@ -110,13 +78,20 @@ std::string YVIMAPClient::lastEmailBody() {
     std::snprintf(buffer, 256, mask.c_str(), lasMessageIndex);
     BIO_puts(bio, buffer);
     BIO_read(bio, tmp, sizeof(tmp) - 1);
-    printf("Answer: <%s>\n", tmp);
-    
+    printf("Answer: <%s>", tmp);
+
     BIO_free(bio);
     SSL_CTX_free(ctx);
     
     return tmp;
 }
 
+int YVIMAPClient::fetchVerificationCode() {
+    const std::string emailBody = lastEmailBody();
+    int code = 6565;
+    
+    return code;
+}
 
 }
+
