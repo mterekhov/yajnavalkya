@@ -8,6 +8,7 @@
 #include <iostream>
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
+#include <time.h>
 
 #include "YVIMAPClient.h"
 #include "YVBLSRussiaPortugalAPI.h"
@@ -29,7 +30,8 @@ std::string recognizeCaptcha(const std::string& filename) {
 	return result;
 }
 
-int main(int argc, const char * argv[]) {
+void checkTimeSlots() {
+    spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
     printf("YajnaValkya: requesting verification code ... ");
     apiService.requestVerificationCode();
@@ -54,13 +56,33 @@ int main(int argc, const char * argv[]) {
     
     printf("YajnaValkya: checking for free slots ... ");
     if (apiService.scheduleAppointment()) {
-        spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
         printf("YajnaValkya: free time slots found! ");
         telegramBot.sendMessage("Free time slots found!\n");
         return 0;
     }
     
     printf("YajnaValkya: no free time slots found\n");
+}
+
+int main(int argc, const char * argv[]) {
+    time_t waitingPeriod = 5 * 60;   //  5 minutes
+    time_t lastMark = 0;
+    while(true) {
+        time_t rawtime;
+        time(&rawtime);
+        struct tm *timeinfo = localtime(&rawtime);
+        if ((timeinfo->tm_hour >= 0) && (timeinfo->tm_hour < 3)) {
+            if ((time(0) - lastMark) > waitingPeriod) {
+                checkTimeSlots();
+                lastMark = time(0);
+            }
+        }
+        
+        if (timeinfo->tm_hour > 2) {
+            printf("YajnaValkya: finished");
+            return 0;
+        }
+    }
 
     return 0;
 }
