@@ -16,6 +16,7 @@ namespace spcYajnaValkya {
 class YVTools {
 public:
     static void waitFor(const time_t seconds);
+    static void vidya(const char* format, ...);
 };
 
 };
