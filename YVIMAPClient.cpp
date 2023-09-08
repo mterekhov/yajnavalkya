@@ -15,7 +15,6 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
@@ -66,38 +65,41 @@ std::string YVIMAPClient::lastEmailBody() {
     memset(buffer, 0, BUFSIZ);
     BIO_read(bio, buffer, sizeof(buffer));
     
-    std::string request = "tag LOGIN yajnavalkya@disroot.org cf1f3QUNc\r\n";
-    BIO_puts(bio, request.c_str());
+    std::string request = "tag LOGIN " + login + "@" + host + " " + password + "\r\n";
+    std::string response = sendRequest(request, bio);
+    printf("RESPONSE:\n%s\n", response.c_str());
+    
+    request = "tag LIST \"\" \"*\"\r\n";
+    response = sendRequest(request, bio);
+    printf("RESPONSE:\n%s\n", response.c_str());
 
-    memset(buffer, 0, BUFSIZ);
-    BIO_read(bio, buffer, sizeof(buffer));
-    printf("RESPONSE:\n%s\n", buffer);
-    
-    BIO_puts(bio, "tag LIST \"\" \"*\"\r\n");
-    memset(buffer, 0, BUFSIZ);
-    BIO_read(bio, buffer, sizeof(buffer));
-    
-    BIO_puts(bio, "tag select INBOX\r\n");
-    memset(buffer, 0, BUFSIZ);
-    BIO_read(bio, buffer, sizeof(buffer));
-    
-    BIO_puts(bio, "tag STATUS INBOX (MESSAGES)\r\n");
-    memset(buffer, 0, BUFSIZ);
-    BIO_read(bio, buffer, sizeof(buffer));
-    printf("Answer: <%s>", buffer);
-    
-    int lasMessageIndex = fetchLastMessageIndex(buffer);
+    request = "tag select INBOX\r\n";
+    response = sendRequest(request, bio);
+    printf("RESPONSE:\n%s\n", response.c_str());
+
+    request = "tag STATUS INBOX (MESSAGES)\r\n";
+    response = sendRequest(request, bio);
+    printf("RESPONSE:\n%s\n", response.c_str());
+
+    int lasMessageIndex = fetchLastMessageIndex(response);
     
     std::string mask = "tag FETCH %i (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n";
     memset(buffer, 0, BUFSIZ);
     std::snprintf(buffer, BUFSIZ, mask.c_str(), lasMessageIndex);
-    BIO_puts(bio, buffer);
-    memset(buffer, 0, BUFSIZ);
-    BIO_read(bio, buffer, sizeof(buffer));
-    printf("Answer: <%s>", buffer);
+    response = sendRequest(buffer, bio);
+    printf("RESPONSE:\n%s\n", response.c_str());
 
     BIO_free(bio);
     SSL_CTX_free(ctx);
+    
+    return response;
+}
+
+std::string YVIMAPClient::sendRequest(const std::string& request, BIO *bio) {
+    BIO_puts(bio, request.c_str());
+    
+    char buffer[BUFSIZ] = {0};
+    BIO_read(bio, buffer, sizeof(buffer));
     
     return buffer;
 }

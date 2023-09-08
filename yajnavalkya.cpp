@@ -33,7 +33,7 @@ int main(int argc, const char * argv[]) {
     time_t timeStamp = time(NULL);
 //    apiService.requestVerificationCode();
     
-    spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya@disroot.org", "cf2f4QUNc");
+    spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc");
     imapClient.fetchVerificationCode();
 //    
 //    printf("text recognized <%s>\n", recognizeCaptcha("/Users/cipher/Desktop/captcha/captcha.jpeg").c_str());

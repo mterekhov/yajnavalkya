@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <openssl/bio.h>
 
 namespace spcYajnaValkya {
 
@@ -26,6 +27,7 @@ private:
     const std::string host;
     const int port;
 
+    std::string sendRequest(const std::string& request, BIO *bio);
     int fetchLastMessageIndex(const std::string& emailBody);
     bool checkEmailSubjectAndDate(const std::string& emailBody);
     std::string lastEmailBody();
