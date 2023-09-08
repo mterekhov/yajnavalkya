@@ -27,6 +27,20 @@ YVIMAPClient::~YVIMAPClient() {
     
 }
 
+std::string YVIMAPClient::fetchVerificationCode() {
+    const std::string emailBody = lastEmailBody();
+    printf("EMAIL BODY:\n%s\n", emailBody.c_str());
+    std::string startMark = "<td colspan=\"5\" style=\"text-align:left\" width=\"50%\">Verification code - ";
+    std::string endMark = "<br/></td>";
+    auto startPosition = emailBody.find(startMark);
+    
+    auto markStartPosition = emailBody.find(startMark);
+    auto markEndPosition = emailBody.find(endMark, markStartPosition);
+    std::string code = emailBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
+    
+    return code;
+}
+
 int YVIMAPClient::fetchLastMessageIndex(const std::string& emailBody) {
     std::string indexString;
     std::string startMark = "(MESSAGES ";
@@ -102,13 +116,6 @@ std::string YVIMAPClient::sendRequest(const std::string& request, BIO *bio) {
     BIO_read(bio, buffer, sizeof(buffer));
     
     return buffer;
-}
-
-int YVIMAPClient::fetchVerificationCode() {
-    const std::string emailBody = lastEmailBody();
-    int code = 6565;
-    
-    return code;
 }
 
 }

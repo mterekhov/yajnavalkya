@@ -19,7 +19,7 @@ public:
     YVIMAPClient(const std::string& host, const int port, const std::string& login, const std::string& password);
     ~YVIMAPClient();
     
-    int fetchVerificationCode();
+    std::string fetchVerificationCode();
     
 private:
     const std::string login;
