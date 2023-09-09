@@ -32,7 +32,7 @@ std::string YVSSLSocket::sendRequest(const std::string& message) {
     openedSocket = connectToServer(host, port);
 
     if (openedSocket < 0) {
-        return;
+        return "";
     }
     ssl = enableSSL(openedSocket);
 
@@ -102,7 +102,7 @@ SSL *YVSSLSocket::enableSSL(const int socket) {
     SSL_set_fd(newSSL, socket);
     int err = SSL_connect(newSSL);
     if (err <= 0) {
-        printf("YajnaValkya::YVSSLSocket: error creating SSL connection\n", err);
+        printf("YajnaValkya::YVSSLSocket: error creating SSL connection\n");
         return NULL;
     }
 
