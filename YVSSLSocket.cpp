@@ -69,10 +69,10 @@ int YVSSLSocket::connectToServer(const std::string host, const int port) {
         return -1;
     }
     
-    struct timeval tv;
+    struct timeval tv = {0};
     tv.tv_sec = 30;
     if (setsockopt(newSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
-        printf("errror <%s>\n", strerror(errno));
+        printf("errror <%i>\n", errno);
     }
 
     struct sockaddr_in socketAddress;
