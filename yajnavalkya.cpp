@@ -65,24 +65,41 @@ void checkTimeSlots() {
 }
 
 int main(int argc, const char * argv[]) {
-    time_t waitingPeriod = 5 * 60;   //  5 minutes
+    time_t waitingPeriod = 3 * 60;   //  5 minutes
+    time_t longWaitingPeriod = 10 * 60;   //  5 minutes
     time_t lastMark = 0;
+    bool introMessageSent = false;
+    bool longIntroMessageSent = false;
+    spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
+    telegramBot.sendMessage("Start to monitor the schedule");
     while(true) {
         time_t rawtime;
         time(&rawtime);
         struct tm *timeinfo = localtime(&rawtime);
         if ((timeinfo->tm_hour >= 0) && (timeinfo->tm_hour < 3)) {
+            if (!introMessageSent) {
+                longIntroMessageSent = false;
+                introMessageSent = true;
+                telegramBot.sendMessage("begining to check time slots frequently");
+            }
             if ((time(0) - lastMark) > waitingPeriod) {
                 checkTimeSlots();
                 lastMark = time(0);
             }
         }
-        
-        if (timeinfo->tm_hour > 2) {
-            printf("YajnaValkya: finished");
-            return 0;
+        else {
+            if ((time(0) - lastMark) > longWaitingPeriod) {
+                if (!longIntroMessageSent) {
+                    longIntroMessageSent = true;
+                    introMessageSent = false;
+                    telegramBot.sendMessage("switched to sleepy check every 10 minutes");
+                }
+                checkTimeSlots();
+                lastMark = time(0);
+            }
         }
     }
+    telegramBot.sendMessage("Monitoring is finished");
 
     return 0;
 }
