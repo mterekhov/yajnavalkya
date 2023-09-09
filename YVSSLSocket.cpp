@@ -18,36 +18,44 @@
 namespace spcYajnaValkya {
 
 YVSSLSocket::YVSSLSocket(const std::string& host, const int port) : host(host), port(port) {
+    SSL_library_init();
+    SSLeay_add_ssl_algorithms();
+    SSL_load_error_strings();
+}
+
+YVSSLSocket::~YVSSLSocket() {
+}
+
+std::string YVSSLSocket::sendRequest(const std::string& message) {
     openedSocket = connectToServer(host, port);
     if (openedSocket < 0) {
         return;
     }
     ssl = enableSSL(openedSocket);
-}
 
-YVSSLSocket::~YVSSLSocket() {
-    SSL_shutdown(ssl);
-    close(openedSocket);
-    SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
-    SSL_free(ssl);
-    SSL_CTX_free(ctx);
-}
-
-std::string YVSSLSocket::sendRequest(const std::string& message) {
     int err = SSL_write(ssl, message.c_str(), message.length());
     if (!err) {
         printf("YajnaValkya::YVSSLSocket: error while sending");
     }
     
-    char buffer[BUFSIZ + 1] = {0};
+    int bufferSize = 8 * BUFSIZ;
+    char *buffer = new char[bufferSize];
+    memset(buffer, 0, bufferSize);
     std::string response = "";
     ssize_t bytes = 1;
     while (bytes > 0) {
-        memset(buffer, 0, BUFSIZ);
-        bytes = SSL_read(ssl, buffer, BUFSIZ);
+        memset(buffer, 0, bufferSize);
+        bytes = SSL_read(ssl, buffer, bufferSize);
         response += buffer;
     }
+    delete [] buffer;
     
+    SSL_shutdown(ssl);
+    close(openedSocket);
+    SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+
     return response;
 }
 
@@ -77,10 +85,6 @@ int YVSSLSocket::connectToServer(const std::string host, const int port) {
 }
 
 SSL *YVSSLSocket::enableSSL(const int socket) {
-    SSL_library_init();
-    SSLeay_add_ssl_algorithms();
-    SSL_load_error_strings();
-    
     SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
     SSL* newSSL = SSL_new(ctx);
     if (!newSSL) {
@@ -94,7 +98,7 @@ SSL *YVSSLSocket::enableSSL(const int socket) {
         printf("YajnaValkya::YVSSLSocket: error creating SSL connection\n", err);
         return NULL;
     }
-    
+
     return newSSL;
 }
 
