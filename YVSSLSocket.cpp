@@ -71,8 +71,10 @@ int YVSSLSocket::connectToServer(const std::string host, const int port) {
     
     struct timeval tv;
     tv.tv_sec = 30;
-    setsockopt(newSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv));
-    
+    if (setsockopt(newSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
+        printf("errror <%s>\n", strerror(errno));
+    }
+
     struct sockaddr_in socketAddress;
     memset(&socketAddress, 0, sizeof(socketAddress));
     socketAddress.sin_family = AF_INET;
