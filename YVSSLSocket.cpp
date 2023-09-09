@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
+#include <sys/ioctl.h>
+
 namespace spcYajnaValkya {
 
 YVSSLSocket::YVSSLSocket(const std::string& host, const int port) : host(host), port(port) {
@@ -28,6 +30,7 @@ YVSSLSocket::~YVSSLSocket() {
 
 std::string YVSSLSocket::sendRequest(const std::string& message) {
     openedSocket = connectToServer(host, port);
+
     if (openedSocket < 0) {
         return;
     }
@@ -35,7 +38,7 @@ std::string YVSSLSocket::sendRequest(const std::string& message) {
 
     int err = SSL_write(ssl, message.c_str(), message.length());
     if (!err) {
-        printf("YajnaValkya::YVSSLSocket: error while sending");
+        printf("YajnaValkya::YVSSLSocket: error while sending\n");
     }
     
     int bufferSize = 8 * BUFSIZ;
@@ -65,6 +68,10 @@ int YVSSLSocket::connectToServer(const std::string host, const int port) {
         printf("YajnaValkya::YVSSLSocket: error creating socket.\n");
         return -1;
     }
+    
+    struct timeval tv;
+    tv.tv_sec = 30;
+    setsockopt(newSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv));
     
     struct sockaddr_in socketAddress;
     memset(&socketAddress, 0, sizeof(socketAddress));

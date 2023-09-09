@@ -41,7 +41,7 @@ void checkTimeSlots() {
     printf("YajnaValkya: receiving verification code from email ... ");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
-        printf("YajnaValkya: verification code was not found in email");
+        printf("YajnaValkya: verification code was not found in email\n");
         return;
     }
     printf("DONE\n");
@@ -56,7 +56,7 @@ void checkTimeSlots() {
     
     printf("YajnaValkya: checking for free slots ... ");
     if (apiService.scheduleAppointment()) {
-        printf("YajnaValkya: free time slots found! ");
+        printf("YajnaValkya: free time slots found!\n");
         telegramBot.sendMessage("Free time slots found!\n");
         return;
     }

@@ -90,9 +90,8 @@ std::string YVIMAPClient::lastEmailBody() {
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     
     char buffer[BUFSIZ] = {0};
-    std::snprintf(buffer, BUFSIZ, ":%i", port);
-    std::string hostConnection = host + buffer;
-    BIO_set_conn_hostname(bio, hostConnection.c_str());
+    std::snprintf(buffer, BUFSIZ, "%s:%i", host.c_str(), port);
+    BIO_set_conn_hostname(bio, buffer);
     BIO_do_connect(bio);
     
     memset(buffer, 0, BUFSIZ);
