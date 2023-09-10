@@ -6,6 +6,7 @@
 //
 
 #include "YVSSLSocket.h"
+#include "YVTools.h"
 
 #include <openssl/err.h>
 #include <sys/types.h>
@@ -38,7 +39,7 @@ std::string YVSSLSocket::sendRequest(const std::string& message) {
 
     int err = SSL_write(ssl, message.c_str(), message.length());
     if (!err) {
-        printf("YajnaValkya::YVSSLSocket: error while sending\n");
+        YVTools::vidya("YVSSLSocket: error while sending\n");
     }
     
     int bufferSize = 8 * BUFSIZ;
@@ -65,7 +66,7 @@ std::string YVSSLSocket::sendRequest(const std::string& message) {
 int YVSSLSocket::connectToServer(const std::string host, const int port) {
     int newSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (newSocket < 0) {
-        printf("YajnaValkya::YVSSLSocket: error creating socket.\n");
+        YVTools::vidya("YVSSLSocket: error creating socket.\n");
         return -1;
     }
     
@@ -80,13 +81,13 @@ int YVSSLSocket::connectToServer(const std::string host, const int port) {
     socketAddress.sin_family = AF_INET;
     struct hostent *he;
     if ((he = gethostbyname(host.c_str())) == NULL) {
-        printf("YajnaValkya::YVSSLSocket: host address is not defined\n");
+        YVTools::vidya("YVSSLSocket: host address is not defined\n");
         return -1;
     }
     socketAddress.sin_addr.s_addr = *((unsigned long*)he->h_addr);
     socketAddress.sin_port = htons(port);
     if (connect(newSocket, (struct sockaddr *)&socketAddress, sizeof(socketAddress))) {
-        printf("YajnaValkya::YVSSLSocket: error connecting to server.\n");
+        YVTools::vidya("YVSSLSocket: error connecting to server.\n");
         return -1;
     }
     
@@ -97,14 +98,14 @@ SSL *YVSSLSocket::enableSSL(const int socket) {
     SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
     SSL* newSSL = SSL_new(ctx);
     if (!newSSL) {
-        printf("YajnaValkya::YVSSLSocket: error creating SSL.\n");
+        YVTools::vidya("YVSSLSocket: error creating SSL.\n");
         return NULL;
     }
     
     SSL_set_fd(newSSL, socket);
     int err = SSL_connect(newSSL);
     if (err <= 0) {
-        printf("YajnaValkya::YVSSLSocket: error creating SSL connection\n");
+        YVTools::vidya("YVSSLSocket: error creating SSL connection\n");
         return NULL;
     }
 

@@ -6,6 +6,7 @@
 //
 
 #include "YVBLSRussiaPortugalAPI.h"
+#include "YVTools.h"
 
 namespace spcYajnaValkya {
 
@@ -51,7 +52,7 @@ bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
 
     auto markStartPosition = htmlBody.find(startMark);
     if (markStartPosition == std::string::npos) {
-        printf("YajnaValkya::YVBLSRussiaPortugalAPI: error parsing available dates\n");
+        YVTools::vidya("YVBLSRussiaPortugalAPI: error parsing available dates\n");
         return false;
     }
     auto markEndPosition = htmlBody.find(endMark, markStartPosition);
@@ -104,7 +105,7 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
     //  fetch CSRF token
     csrfToken = parseCSRFToken(response);
     if (csrfToken.empty()) {
-        printf("YajnaValkya::YVBLSRussiaPortugalAPI: CSRF token not found\n");
+        YVTools::vidya("YVBLSRussiaPortugalAPI: CSRF token not found\n");
         return;
     }
 

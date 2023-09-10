@@ -13,6 +13,8 @@
 #include "YVIMAPClient.h"
 #include "YVBLSRussiaPortugalAPI.h"
 #include "YVTelegramBotAPI.h"
+#include "YVTools.h"
+
 
 std::string recognizeCaptcha(const std::string& filename) {
 	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
@@ -33,35 +35,35 @@ std::string recognizeCaptcha(const std::string& filename) {
 void checkTimeSlots() {
     spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
-    printf("YajnaValkya: requesting verification code ... ");
+    spcYajnaValkya::YVTools::vidya("requesting verification code ... ");
     apiService.requestVerificationCode();
     printf("DONE\n");
     
     spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
-    printf("YajnaValkya: receiving verification code from email ... ");
+    spcYajnaValkya::YVTools::vidya("receiving verification code from email ... ");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
-        printf("YajnaValkya: verification code was not found in email\n");
+        spcYajnaValkya::YVTools::vidya("verification code was not found in email\n");
         return;
     }
     printf("DONE\n");
     
-    printf("YajnaValkya: requesting appointment ... ");
+    spcYajnaValkya::YVTools::vidya("requesting appointment ... ");
     apiService.requestAppointment(verificationCode);
     printf("DONE\n");
     
-    printf("YajnaValkya: signing agreement ... ");
+    spcYajnaValkya::YVTools::vidya("signing agreement ... ");
     apiService.termsOfUseAgree();
     printf("DONE\n");
     
-    printf("YajnaValkya: checking for free slots ... ");
+    spcYajnaValkya::YVTools::vidya("checking for free slots ... ");
     if (apiService.scheduleAppointment()) {
-        printf("YajnaValkya: free time slots found!\n");
+        spcYajnaValkya::YVTools::vidya("free time slots found!\n");
         telegramBot.sendMessage("Free time slots found!\n");
         return;
     }
     
-    printf("YajnaValkya: no free time slots found\n");
+    spcYajnaValkya::YVTools::vidya("no free time slots found\n");
 }
 
 int main(int argc, const char * argv[]) {
