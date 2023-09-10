@@ -15,6 +15,7 @@
 #include "YVTelegramBotAPI.h"
 #include "YVTools.h"
 
+spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
 
 std::string recognizeCaptcha(const std::string& filename) {
 	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
@@ -33,7 +34,6 @@ std::string recognizeCaptcha(const std::string& filename) {
 }
 
 void checkTimeSlots() {
-    spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
     spcYajnaValkya::YVTools::vidya("requesting verification code ... ");
     apiService.requestVerificationCode();
@@ -72,7 +72,6 @@ int main(int argc, const char * argv[]) {
     time_t lastMark = 0;
     bool introMessageSent = false;
     bool longIntroMessageSent = false;
-    spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
     telegramBot.sendMessage("Start to monitor the schedule");
     while(true) {
         time_t rawtime;
