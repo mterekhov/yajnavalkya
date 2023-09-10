@@ -9,6 +9,7 @@
 #define YVBLSRussiaPortugalAPI_H
 
 #include "YVHTTPRequestService.h"
+#include "YVContentChecker.h"
 
 namespace spcYajnaValkya {
 
@@ -17,9 +18,9 @@ public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();
 
-    void requestVerificationCode();
-    void requestAppointment(const std::string& otp);
-    void termsOfUseAgree();
+    bool requestVerificationCode();
+    bool requestAppointment(const std::string& otp);
+    bool termsOfUseAgree();
     bool scheduleAppointment();
 
 private:
@@ -28,6 +29,7 @@ private:
     std::string csrfToken = "";
 
     YVHTTPRequestService httpService;
+    YVContentChecker checker;
     
     std::string parseCSRFToken(const std::string& response);
     std::string parsePHPSessionCookie(const std::string& response);
@@ -36,7 +38,5 @@ private:
 };
 
 };
-
-#include <stdio.h>
 
 #endif /* YVAPI_hpp */

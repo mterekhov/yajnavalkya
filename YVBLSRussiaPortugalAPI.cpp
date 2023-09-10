@@ -42,6 +42,10 @@ bool YVBLSRussiaPortugalAPI::scheduleAppointment() {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
     }
     std::string response = httpService.sendGETRequest("/russian/appointment_family.php", HTTPParsType(), headers);
+    if (!checker.checkStep_05(response)) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to get page with available dates\n");
+        return false;
+    }
     return checkFreeSlots(response);
 }
 
@@ -50,13 +54,14 @@ bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
                                            "]",
                                            htmlBody);
     if (freeSlots.empty()) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: no free time slots found\n");
         return false;
     }
 
     return true;
 }
 
-void YVBLSRussiaPortugalAPI::termsOfUseAgree() {
+bool YVBLSRussiaPortugalAPI::termsOfUseAgree() {
     HTTPParsType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
@@ -65,11 +70,16 @@ void YVBLSRussiaPortugalAPI::termsOfUseAgree() {
                                                                                             {"agree", "Agree"}
                                                                                         },
                                                        headers);
-
+    if (!checker.checkStep_04(response)) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to sign agreement\n");
+        return false;
+    }
+    
     phpSession = parsePHPSessionCookie(response);
+    return true;
 }
 
-void YVBLSRussiaPortugalAPI::requestAppointment(const std::string& otp) {
+bool YVBLSRussiaPortugalAPI::requestAppointment(const std::string& otp) {
     HTTPParsType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
@@ -88,17 +98,27 @@ void YVBLSRussiaPortugalAPI::requestAppointment(const std::string& otp) {
         {"save", "%D0%9F%D1%80%D0%BE%D0%B4%D0%BE%D0%BB%D0%B6%D0%B8%D1%82%D1%8C"}
     }, headers);
 
+    if (!checker.checkStep_03(response)) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to get agreement\n");
+        return false;
+    }
+    
     phpSession = parsePHPSessionCookie(response);
+    return true;
 }
 
-void YVBLSRussiaPortugalAPI::requestVerificationCode() {
+bool YVBLSRussiaPortugalAPI::requestVerificationCode() {
     std::string response = httpService.sendGETRequest("/russian/book_appointment.php");
+    if (!checker.checkStep_01(response)) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to receive initial html page\n");
+        return false;
+    }
     
     //  fetch CSRF token
     csrfToken = parseCSRFToken(response);
     if (csrfToken.empty()) {
         YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: CSRF token not found\n");
-        return;
+        return false;
     }
 
     //  fetch PHPSESSID cookie
@@ -116,9 +136,14 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
                                                                         {"token", csrfToken}
                                                                     },
                                            headers);
+    if (!checker.checkStep_02(response)) {
+        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to request verification code\n");
+        return false;
+    }
 
     //  fetch PHPSESSID cookie
     phpSession = parsePHPSessionCookie(response);
+    return true;
 }
 
 std::string YVBLSRussiaPortugalAPI::parseCSRFToken(const std::string& response) {

@@ -7,6 +7,7 @@
 
 #include "YVHTTPRequestService.h"
 #include "YVSSLSocket.h"
+#include "YVTools.h"
 
 namespace spcYajnaValkya {
 

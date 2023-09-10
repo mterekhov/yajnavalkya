@@ -16,6 +16,7 @@
 #include "YVTools.h"
 
 spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
+int cycle = 1;
 
 std::string recognizeCaptcha(const std::string& filename) {
 	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
@@ -34,36 +35,38 @@ std::string recognizeCaptcha(const std::string& filename) {
 }
 
 void checkTimeSlots() {
+    spcYajnaValkya::YVTools::vidyaInfo("Starting new cycle %04i\n", cycle++);
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
-    spcYajnaValkya::YVTools::vidyaInfo("requesting verification code ... ");
-    apiService.requestVerificationCode();
-    printf("DONE\n");
+    spcYajnaValkya::YVTools::vidyaInfo("\t\trequesting verification code ...\n");
+    if (!apiService.requestVerificationCode()) {
+        return;
+    };
     
     spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
-    spcYajnaValkya::YVTools::vidyaInfo("receiving verification code from email ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("\t\treceiving verification code from email ...\n");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
-        spcYajnaValkya::YVTools::vidyaInfo("verification code was not found in email\n");
+        spcYajnaValkya::YVTools::vidyaInfo("\t\tverification code was not found in email\n");
         return;
     }
-    printf("DONE\n");
     
-    spcYajnaValkya::YVTools::vidyaInfo("requesting appointment ... ");
-    apiService.requestAppointment(verificationCode);
-    printf("DONE\n");
+    spcYajnaValkya::YVTools::vidyaInfo("\t\trequesting appointment ...\n");
+    if (!apiService.requestAppointment(verificationCode)) {
+        return;
+    }
     
-    spcYajnaValkya::YVTools::vidyaInfo("signing agreement ... ");
-    apiService.termsOfUseAgree();
-    printf("DONE\n");
+    spcYajnaValkya::YVTools::vidyaInfo("\t\tsigning agreement ...\n");
+    if (!apiService.termsOfUseAgree()) {
+        return;
+    }
     
-    spcYajnaValkya::YVTools::vidyaInfo("checking for free slots ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("\t\tchecking for free slots ...\n");
     if (apiService.scheduleAppointment()) {
-        spcYajnaValkya::YVTools::vidyaInfo("free time slots found!\n");
+        spcYajnaValkya::YVTools::vidyaInfo("\t\tfree time slots found!\n");
         telegramBot.sendMessage("Free time slots found!\n");
-        return;
     }
     
-    spcYajnaValkya::YVTools::vidyaInfo("no free time slots found\n");
+    spcYajnaValkya::YVTools::vidyaInfo("Cycle finished\n");
 }
 
 int main(int argc, const char * argv[]) {
@@ -72,6 +75,7 @@ int main(int argc, const char * argv[]) {
     time_t lastMark = 0;
     bool introMessageSent = false;
     bool longIntroMessageSent = false;
+    spcYajnaValkya::YVTools::vidyaInfo("Launching ...\n");
     telegramBot.sendMessage("Start to monitor the schedule");
     while(true) {
         time_t rawtime;

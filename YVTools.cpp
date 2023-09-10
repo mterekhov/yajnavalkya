@@ -5,9 +5,17 @@
 //  Created by cipher on 08.09.2023.
 //
 
+#include <stdio.h>
 #include "YVTools.h"
 
 namespace spcYajnaValkya {
+
+void YVTools::save(const std::string& filename, const char *data, const size_t dataSize) {
+    std::string finalFileName = "/Users/cipher/backup/" + filename;
+    FILE *fileHandler = fopen(finalFileName.c_str(), "wb");
+    fwrite(data, dataSize, 1, fileHandler);
+    fclose(fileHandler);
+}
 
 void YVTools::waitFor(const time_t seconds) {
     time_t mark = time(NULL);

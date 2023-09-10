@@ -28,6 +28,7 @@ public:
     static void vidyaInfo(const char* format, ...);
     static void vidyaError(const char* format, ...);
     static void vidyaWarning(const char* format, ...);
+    static void save(const std::string& filename, const char *data, const size_t dataSize);
 
 private:
     static void vidya(const YVToolsVidyaType type, const char* format, va_list args);

@@ -104,7 +104,7 @@ std::string YVIMAPClient::lastEmailBody() {
 
     int lastMessageIndex = fetchLastMessageIndex(response);
     if (lastMessageIndex < 0) {
-        YVTools::vidyaWarning("last message index was not found in IMAP response\n");
+        YVTools::vidyaWarning("YVIMAPClient: last message index was not found in IMAP response\n");
     }
     else {
         std::string mask = "tag FETCH %i (BODY[HEADER.FIELDS (FROM DATE)] BODY[TEXT])\r\n";
