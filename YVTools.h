@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdarg.h>
+#include <string>
 
 namespace spcYajnaValkya {
 
@@ -22,6 +23,7 @@ enum YVToolsVidyaType {
 
 class YVTools {
 public:
+    static std::string parse(const std::string& startMark, const std::string& endMark, const std::string& textToParse);
     static void waitFor(const time_t seconds);
     static void vidyaInfo(const char* format, ...);
     static void vidyaError(const char* format, ...);

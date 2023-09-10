@@ -46,22 +46,14 @@ bool YVBLSRussiaPortugalAPI::scheduleAppointment() {
 }
 
 bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
-    std::string startMark = "var available_dates = [";
-    std::string endMark = "]";
-    auto startPosition = htmlBody.find(startMark);
-
-    auto markStartPosition = htmlBody.find(startMark);
-    if (markStartPosition == std::string::npos) {
-        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: error parsing available dates\n");
+    std::string freeSlots = YVTools::parse("var available_dates = [",
+                                           "]",
+                                           htmlBody);
+    if (freeSlots.empty()) {
         return false;
     }
-    auto markEndPosition = htmlBody.find(endMark, markStartPosition);
-    std::string freeSlots = htmlBody.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
-    if (!freeSlots.empty()) {
-        return true;
-    }
-    
-    return false;
+
+    return true;
 }
 
 void YVBLSRussiaPortugalAPI::termsOfUseAgree() {
@@ -130,26 +122,20 @@ void YVBLSRussiaPortugalAPI::requestVerificationCode() {
 }
 
 std::string YVBLSRussiaPortugalAPI::parseCSRFToken(const std::string& response) {
-    std::string startMark = "<input type=\"hidden\" name=\"tokenvalue\" id=\"csrftokenvalue\" value=\"";
-    std::string endMark = "\">";
-    auto startPosition = response.find(startMark);
-
-    auto markStartPosition = response.find(startMark);
-    auto markEndPosition = response.find(endMark, markStartPosition);
-    std::string token = response.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
-
-    return token;
+    return YVTools::parse("<input type=\"hidden\" name=\"tokenvalue\" id=\"csrftokenvalue\" value=\"",
+                          "\">",
+                          response);
 }
 
 std::string YVBLSRussiaPortugalAPI::parsePHPSessionCookie(const std::string& response) {
     std::string startMark = "Set-Cookie: PHPSESSID=";
-    std::string endMark = "; path=/;";
-    auto startPosition = response.find(startMark);
-
-    auto markStartPosition = response.find(startMark);
-    auto markEndPosition = response.find(endMark, markStartPosition);
-    std::string token = response.substr(markStartPosition + startMark.length(), markEndPosition - markStartPosition - startMark.length());
-
+    std::string token = YVTools::parse(startMark,
+                                       "; path=/;",
+                                       response);
+    if (token.empty()) {
+        YVTools::vidyaWarning("YVBLSRussiaPortugalAPI: PHPSESSID token was not found\n");
+    }
+    
     return token;
 }
 

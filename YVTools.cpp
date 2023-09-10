@@ -6,8 +6,6 @@
 //
 
 #include "YVTools.h"
-#include <time.h>
-#include <string>
 
 namespace spcYajnaValkya {
 
@@ -15,6 +13,16 @@ void YVTools::waitFor(const time_t seconds) {
     time_t mark = time(NULL);
     while((time(NULL) - mark) < seconds) {
     }
+}
+
+std::string YVTools::parse(const std::string& startMark, const std::string& endMark, const std::string& textToParse) {
+    auto markStartPosition = textToParse.find(startMark);
+    auto markEndPosition = textToParse.find(endMark, markStartPosition);
+    if ((markStartPosition == std::string::npos) || (markEndPosition == std::string::npos)) {
+        return "";
+    }
+    return textToParse.substr(markStartPosition + startMark.length(),
+                              markEndPosition - markStartPosition - startMark.length());
 }
 
 void YVTools::vidyaInfo(const char* format, ...) {
