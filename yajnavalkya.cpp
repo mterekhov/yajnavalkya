@@ -35,35 +35,35 @@ std::string recognizeCaptcha(const std::string& filename) {
 
 void checkTimeSlots() {
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
-    spcYajnaValkya::YVTools::vidya("requesting verification code ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("requesting verification code ... ");
     apiService.requestVerificationCode();
     printf("DONE\n");
     
     spcYajnaValkya::YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
-    spcYajnaValkya::YVTools::vidya("receiving verification code from email ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("receiving verification code from email ... ");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
-        spcYajnaValkya::YVTools::vidya("verification code was not found in email\n");
+        spcYajnaValkya::YVTools::vidyaInfo("verification code was not found in email\n");
         return;
     }
     printf("DONE\n");
     
-    spcYajnaValkya::YVTools::vidya("requesting appointment ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("requesting appointment ... ");
     apiService.requestAppointment(verificationCode);
     printf("DONE\n");
     
-    spcYajnaValkya::YVTools::vidya("signing agreement ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("signing agreement ... ");
     apiService.termsOfUseAgree();
     printf("DONE\n");
     
-    spcYajnaValkya::YVTools::vidya("checking for free slots ... ");
+    spcYajnaValkya::YVTools::vidyaInfo("checking for free slots ... ");
     if (apiService.scheduleAppointment()) {
-        spcYajnaValkya::YVTools::vidya("free time slots found!\n");
+        spcYajnaValkya::YVTools::vidyaInfo("free time slots found!\n");
         telegramBot.sendMessage("Free time slots found!\n");
         return;
     }
     
-    spcYajnaValkya::YVTools::vidya("no free time slots found\n");
+    spcYajnaValkya::YVTools::vidyaInfo("no free time slots found\n");
 }
 
 int main(int argc, const char * argv[]) {
