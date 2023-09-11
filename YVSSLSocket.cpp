@@ -44,7 +44,6 @@ std::string YVSSLSocket::sendRequest(const std::string& message) {
     
     int bufferSize = 8 * BUFSIZ;
     char *buffer = new char[bufferSize];
-    memset(buffer, 0, bufferSize);
     std::string response = "";
     ssize_t bytes = 1;
     while (bytes > 0) {

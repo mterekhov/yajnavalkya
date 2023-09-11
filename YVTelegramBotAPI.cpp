@@ -24,7 +24,8 @@ void YVTelegramBotAPI::sendMessage(const std::string& message) {
         {"text", message}
                                                         },
                                                        {
-        {"accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}
+        {"accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"},
+        {"connection", "close"}
                                                         });
 }
 
