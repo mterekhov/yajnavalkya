@@ -50,7 +50,7 @@ bool YVIMAPClient::checkEmailSubjectAndDate(const std::string& emailBody) {
                                                 "\r\n",
                                                 emailBody);
     struct tm emailTime = {0};
-    strptime(timeDateString.c_str(), "%a, %d %b %Y %H:%M:%S +%z", &emailTime);
+    strptime(timeDateString.c_str(), "%a, %d %b %Y %H:%M:%S +%Z", &emailTime);
 
     std::string subject = YVTools::parse("From: ",
                                          "\r\n",
