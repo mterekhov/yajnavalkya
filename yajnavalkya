@@ -1,0 +1,13 @@
+#!/bin/sh
+ 
+#
+# PROVIDE: yajnavalkya
+# REQUIRE: networking nginx
+# KEYWORD: shutdown
+. /etc/rc.subr
+name=yajnavalkya
+rcvar=yajnavalkya_enable
+command="/usr/local/bin/${name}"
+pidfile="/var/run/${name}.pid"
+load_rc_config $name
+run_rc_command "$1"
