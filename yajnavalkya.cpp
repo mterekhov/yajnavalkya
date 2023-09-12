@@ -16,7 +16,6 @@
 #include "YVTools.h"
 
 spcYajnaValkya::YVTelegramBotAPI telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0");
-int cycle = 1;
 
 std::string recognizeCaptcha(const std::string& filename) {
 	tesseract::TessBaseAPI *tesseract = new tesseract::TessBaseAPI();
@@ -34,7 +33,7 @@ std::string recognizeCaptcha(const std::string& filename) {
 	return result;
 }
 
-void checkTimeSlots() {
+void checkTimeSlots(int& cycle) {
     spcYajnaValkya::YVTools::vidyaInfo("Starting new cycle %04i\n", cycle++);
     spcYajnaValkya::YVBLSRussiaPortugalAPI apiService;
     spcYajnaValkya::YVTools::vidyaInfo("\t\trequesting verification code ...\n");
@@ -69,7 +68,12 @@ void checkTimeSlots() {
     spcYajnaValkya::YVTools::vidyaInfo("Cycle finished\n");
 }
 
-int main(int argc, const char * argv[]) {
+void daemonization() {
+    
+}
+
+void launchSchedule() {
+    int cycle = 1;
     time_t waitingPeriod = 3 * 60;   //  5 minutes
     time_t longWaitingPeriod = 10 * 60;   //  5 minutes
     time_t lastMark = 0;
@@ -88,7 +92,7 @@ int main(int argc, const char * argv[]) {
                 telegramBot.sendMessage("begining to check time slots frequently");
             }
             if ((time(0) - lastMark) > waitingPeriod) {
-                checkTimeSlots();
+                checkTimeSlots(cycle);
                 lastMark = time(0);
             }
         }
@@ -99,12 +103,22 @@ int main(int argc, const char * argv[]) {
                     introMessageSent = false;
                     telegramBot.sendMessage("switched to sleepy check every 10 minutes");
                 }
-                checkTimeSlots();
+                checkTimeSlots(cycle);
                 lastMark = time(0);
             }
         }
     }
     telegramBot.sendMessage("Monitoring is finished");
+}
 
+int main(int argc, const char * argv[]) {
+#ifdef __FreeBSD__
+    printf("daemonization\n");
+    daemonization();
+#else
+    printf("stright launch\n");
+    launchSchedule();
+#endif
+    
     return 0;
 }
