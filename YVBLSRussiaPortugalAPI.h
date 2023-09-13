@@ -25,7 +25,7 @@ public:
 
     bool requestVerificationCode();
     bool requestAppointment(EScheduleRequestType type, const std::string& otp);
-    bool termsOfUseAgree();
+    bool termsOfUseAgree(EScheduleRequestType type);
     bool scheduleAppointment();
 
 private:

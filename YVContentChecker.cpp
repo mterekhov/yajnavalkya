@@ -49,6 +49,16 @@ bool YVContentChecker::checkStep_04(const std::string& response) {
     return true;
 }
 
+/// Check that the agreement was successfully signed
+/// - Parameter response: true in case everything is ok
+bool YVContentChecker::checkStep_04_single(const std::string& response) {
+    if (response.find("<script>document.location.href='appointment.php'</script>") == std::string::npos) {
+        return false;
+    }
+    
+    return true;
+}
+
 /// Check that the content of page with schedule calendar is correct
 /// - Parameter response: true in case everything is ok
 bool YVContentChecker::checkStep_05(const std::string& response) {

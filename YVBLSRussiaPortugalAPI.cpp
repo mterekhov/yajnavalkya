@@ -43,7 +43,7 @@ bool YVBLSRussiaPortugalAPI::checkFreeSlots(const std::string& htmlBody) {
     return true;
 }
 
-bool YVBLSRussiaPortugalAPI::termsOfUseAgree() {
+bool YVBLSRussiaPortugalAPI::termsOfUseAgree(EScheduleRequestType type) {
     HTTPParsType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
@@ -52,12 +52,23 @@ bool YVBLSRussiaPortugalAPI::termsOfUseAgree() {
         {"agree", "Agree"}
     },
                                                        headers);
-    FILE *filo = fopen("/Users/cipher/agreement.html", "wb");
+    FILE *filo = fopen("/Users/cipher/agreement_result.html", "wb");
     fwrite(response.c_str(), response.length(), 1, filo);
     fclose(filo);
-    if (!checker.checkStep_04(response)) {
-        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to sign agreement because response is corrupted\n");
-        return false;
+    
+    switch (type) {
+        case SCHEDULE_REQUEST_SINGLE:
+            if (!checker.checkStep_04_single(response)) {
+                YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to sign agreement because response is corrupted\n");
+                return false;
+            }
+            break;
+        case SCHEDULE_REQUEST_FAMILY:
+            if (!checker.checkStep_04(response)) {
+                YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: failed to sign agreement because response is corrupted\n");
+                return false;
+            }
+            break;
     }
     
     phpSession = parsePHPSessionCookie(response);
@@ -72,6 +83,9 @@ bool YVBLSRussiaPortugalAPI::requestAppointment(EScheduleRequestType type, const
     std::string response = httpService.sendPOSTRequest("/russian/book_appointment.php",
                                                        parametersCombination(type, otp),
                                                        headers);
+    FILE *filo = fopen("/Users/cipher/agreement.html", "wb");
+    fwrite(response.c_str(), response.length(), 1, filo);
+    fclose(filo);
     if (!checker.checkStep_03(response)) {
         YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: agreement page is corrupted\n");
         return false;

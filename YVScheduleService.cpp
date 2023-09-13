@@ -93,7 +93,7 @@ void YVScheduleService::checkSingleSchedule() {
     }
     
     YVTools::vidyaInfo("\t\tsigning agreement ...\n");
-    if (!apiService.termsOfUseAgree()) {
+    if (!apiService.termsOfUseAgree(SCHEDULE_REQUEST_SINGLE)) {
         return;
     }
     
@@ -125,7 +125,7 @@ void YVScheduleService::checkFamilySchedule() {
     }
     
     YVTools::vidyaInfo("\t\tsigning agreement ...\n");
-    if (!apiService.termsOfUseAgree()) {
+    if (!apiService.termsOfUseAgree(SCHEDULE_REQUEST_FAMILY)) {
         return;
     }
     
