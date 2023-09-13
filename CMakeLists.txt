@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 20)
-
 set(PROJECT_NAME yajnavalkya)
-
 
 if(APPLE)
 	set(OPENSSL_ROOT_DIR /opt/homebrew/Cellar/openssl@1.1/1.1.1u/)
@@ -31,7 +29,7 @@ include(GNUInstallDirs)
 
 include_directories(/usr/local/include)
 
-add_executable(${PROJECT_NAME} yajnavalkya.cpp YVBLSRussiaPortugalAPI.cpp YVHTTPRequestService.cpp YVIMAPClient.cpp YVSSLSocket.cpp YVTools.cpp YVTelegramBotAPI.cpp YVContentChecker.cpp)
+add_executable(${PROJECT_NAME} yajnavalkya.cpp YVBLSRussiaPortugalAPI.cpp YVHTTPRequestService.cpp YVIMAPClient.cpp YVSSLSocket.cpp YVTools.cpp YVTelegramBotAPI.cpp YVContentChecker.cpp YVScheduleService.cpp)
 
 if(APPLE)
 	find_library(TESSERACT_LIB tesseract lib)

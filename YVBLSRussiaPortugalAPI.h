@@ -13,13 +13,18 @@
 
 namespace spcYajnaValkya {
 
+enum EScheduleRequestType {
+    SCHEDULE_REQUEST_FAMILY,
+    SCHEDULE_REQUEST_SINGLE
+};
+
 class YVBLSRussiaPortugalAPI {
 public:
     YVBLSRussiaPortugalAPI();
     ~YVBLSRussiaPortugalAPI();
 
     bool requestVerificationCode();
-    bool requestAppointment(const std::string& otp);
+    bool requestAppointment(EScheduleRequestType type, const std::string& otp);
     bool termsOfUseAgree();
     bool scheduleAppointment();
 
@@ -31,6 +36,7 @@ private:
     YVHTTPRequestService httpService;
     YVContentChecker checker;
     
+    HTTPParsType parametersCombination(const EScheduleRequestType type, const std::string& otp);
     std::string parseCSRFToken(const std::string& response);
     std::string parsePHPSessionCookie(const std::string& response);
     HTTPParsType defaultHeaders();

@@ -10,4 +10,3 @@ rm cmake_install.cmake
 rm CMakeCache.txt
 rm -Rf yajnavalkya.xcodeproj
 rm -Rf Makefile
-rm -Rf yajnavalkya

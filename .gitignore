@@ -2,6 +2,7 @@ build
 CMakeFiles
 CMakeScripts
 Debug
+Release
 DerivedData
 EagerLinkingTBDs
 yajnavalkya.build
