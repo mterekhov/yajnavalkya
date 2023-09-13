@@ -47,7 +47,7 @@ void daemonization(spcYajnaValkya::YVScheduleService& scheduleService) {
 }
 
 int main(int argc, const char * argv[]) {
-    spcYajnaValkya::YVScheduleService scheduleService;
+    spcYajnaValkya::YVScheduleService scheduleService(120);
     
 #ifdef __FreeBSD__
     printf("daemonization\n");

@@ -92,6 +92,7 @@ std::string YVIMAPClient::lastEmailBody() {
     
     std::string request = "tag LOGIN " + login + "@" + host + " " + password + "\r\n";
     std::string response = sendRequest(request, bio);
+    
     request = "tag select INBOX\r\n";
     response = sendRequest(request, bio);
 

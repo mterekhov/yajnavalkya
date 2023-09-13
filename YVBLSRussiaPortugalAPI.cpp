@@ -18,16 +18,31 @@ YVBLSRussiaPortugalAPI::~YVBLSRussiaPortugalAPI() {
     
 }
 
-bool YVBLSRussiaPortugalAPI::scheduleAppointment() {
+bool YVBLSRussiaPortugalAPI::scheduleAppointment(const EScheduleRequestType type) {
     HTTPHeadersType headers = defaultHeaders();
     if (!phpSession.empty()) {
         headers.push_back({"Cookie", "PHPSESSID=" + phpSession});
     }
-    std::string response = httpService.sendGETRequest("/russian/appointment_family.php", HTTPParsType(), headers);
-    if (!checker.checkStep_05(response)) {
-        YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: page with available dates is corrupted\n");
-        return false;
+    
+    std::string response;
+    switch (type) {
+        case SCHEDULE_REQUEST_FAMILY:
+            response = httpService.sendGETRequest("/russian/appointment_family.php", HTTPParsType(), headers);
+            if (!checker.checkStep_05(response)) {
+                YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: page with available dates is corrupted\n");
+                return false;
+            }
+            break;
+        case SCHEDULE_REQUEST_SINGLE:
+            response = httpService.sendGETRequest("/russian/appointment.php", HTTPParsType(), headers);
+            if (!checker.checkStep_05_single(response)) {
+                YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: page with available dates is corrupted\n");
+                return false;
+            }
+            break;
     }
+    
+    
     return checkFreeSlots(response);
 }
 
@@ -52,10 +67,7 @@ bool YVBLSRussiaPortugalAPI::termsOfUseAgree(EScheduleRequestType type) {
         {"agree", "Agree"}
     },
                                                        headers);
-    FILE *filo = fopen("/Users/cipher/agreement_result.html", "wb");
-    fwrite(response.c_str(), response.length(), 1, filo);
-    fclose(filo);
-    
+
     switch (type) {
         case SCHEDULE_REQUEST_SINGLE:
             if (!checker.checkStep_04_single(response)) {
@@ -83,9 +95,7 @@ bool YVBLSRussiaPortugalAPI::requestAppointment(EScheduleRequestType type, const
     std::string response = httpService.sendPOSTRequest("/russian/book_appointment.php",
                                                        parametersCombination(type, otp),
                                                        headers);
-    FILE *filo = fopen("/Users/cipher/agreement.html", "wb");
-    fwrite(response.c_str(), response.length(), 1, filo);
-    fclose(filo);
+
     if (!checker.checkStep_03(response)) {
         YVTools::vidyaInfo("YVBLSRussiaPortugalAPI: agreement page is corrupted\n");
         return false;

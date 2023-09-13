@@ -61,6 +61,16 @@ bool YVContentChecker::checkStep_04_single(const std::string& response) {
 
 /// Check that the content of page with schedule calendar is correct
 /// - Parameter response: true in case everything is ok
+bool YVContentChecker::checkStep_05_single(const std::string& response) {
+    if (response.find("LAISSEZ-PASSER") == std::string::npos) {
+        return false;
+    }
+    
+    return true;
+}
+
+/// Check that the content of page with schedule calendar is correct
+/// - Parameter response: true in case everything is ok
 bool YVContentChecker::checkStep_05(const std::string& response) {
     if (response.find("<option value='6' selected>ORDINARY PASSPORT</option>") == std::string::npos) {
         return false;

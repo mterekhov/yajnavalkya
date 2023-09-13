@@ -26,7 +26,7 @@ public:
     bool requestVerificationCode();
     bool requestAppointment(EScheduleRequestType type, const std::string& otp);
     bool termsOfUseAgree(EScheduleRequestType type);
-    bool scheduleAppointment();
+    bool scheduleAppointment(const EScheduleRequestType type);
 
 private:
     const std::string hostName = "blsrussiaportugal.com";

@@ -18,10 +18,10 @@ public:
     bool checkStep_01(const std::string& response);
     bool checkStep_02(const std::string& response);
     bool checkStep_03(const std::string& response);
-    bool checkStep_03(const std::string& response);
     bool checkStep_04(const std::string& response);
     bool checkStep_04_single(const std::string& response);
     bool checkStep_05(const std::string& response);
+    bool checkStep_05_single(const std::string& response);
 };
 
 };

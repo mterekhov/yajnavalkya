@@ -28,7 +28,7 @@ private:
     const std::string host;
     const int port;
     
-    //  when the last email body found it will be checked if it's date/time is no exceeding this value in seconds
+    //  when the last email body found it will be checked if it's date/time is not exceeding this value in seconds
     const time_t timeArea;
     
     //  period of checking for email in seconds

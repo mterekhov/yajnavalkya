@@ -7,14 +7,13 @@
 
 #include "YVScheduleService.h"
 #include "YVTools.h"
-#include "YVBLSRussiaPortugalAPI.h"
 #include "YVIMAPClient.h"
 
 #include <time.h>
 
 namespace spcYajnaValkya {
 
-YVScheduleService::YVScheduleService() : telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0") {
+YVScheduleService::YVScheduleService(const int timeArea) : telegramBot("6356062369:AAHGg0paAAwIaWX8sC-4S1LQECjskaesHb0"), timeArea(timeArea) {
     
 }
 
@@ -64,10 +63,13 @@ void YVScheduleService::launchSchedule() {
 void YVScheduleService::checkTimeSlots(int& cycle) {
     YVTools::vidyaInfo("Starting new cycle %04i\n", cycle++);
     
-    YVTools::vidyaInfo("\t\tSingle time slots\n");
+    YVTools::vidyaInfo("\t\tSingle time slots check\n");
     checkSingleSchedule();
-//    YVTools::vidyaInfo("\t\tFamily time slots\n");
-//    checkFamilySchedule();
+    
+    YVTools::waitFor(timeArea);
+    
+    YVTools::vidyaInfo("\t\tFamily time slots check\n");
+    checkFamilySchedule();
     
     YVTools::vidyaInfo("Cycle finished\n");
 }
@@ -79,7 +81,7 @@ void YVScheduleService::checkSingleSchedule() {
         return;
     };
     
-    YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
+    YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", timeArea);
     YVTools::vidyaInfo("\t\treceiving verification code from email ...\n");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
@@ -98,9 +100,8 @@ void YVScheduleService::checkSingleSchedule() {
     }
     
     YVTools::vidyaInfo("\t\tchecking for free slots ...\n");
-    if (apiService.scheduleAppointment()) {
-        YVTools::vidyaInfo("\t\tfree time slots found!\n");
-        telegramBot.sendMessage("Free time slots found!\n");
+    if (apiService.scheduleAppointment(SCHEDULE_REQUEST_SINGLE)) {
+        timeSlotsFoundNotification(SCHEDULE_REQUEST_SINGLE);
     }
 }
 
@@ -111,7 +112,7 @@ void YVScheduleService::checkFamilySchedule() {
         return;
     };
     
-    YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", 120);
+    YVIMAPClient imapClient("disroot.org", 993, "yajnavalkya", "cf1f3QUNc", timeArea);
     YVTools::vidyaInfo("\t\treceiving verification code from email ...\n");
     std::string verificationCode = imapClient.fetchVerificationCode();
     if (verificationCode.empty()) {
@@ -130,10 +131,28 @@ void YVScheduleService::checkFamilySchedule() {
     }
     
     YVTools::vidyaInfo("\t\tchecking for free slots ...\n");
-    if (apiService.scheduleAppointment()) {
-        YVTools::vidyaInfo("\t\tfree time slots found!\n");
-        telegramBot.sendMessage("Free time slots found!\n");
+    if (apiService.scheduleAppointment(SCHEDULE_REQUEST_FAMILY)) {
+        timeSlotsFoundNotification(SCHEDULE_REQUEST_FAMILY);
     }
+}
+
+void YVScheduleService::timeSlotsFoundNotification(const EScheduleRequestType type) {
+    YVTools::vidyaInfo("\t\tsingle free time slots found!\n");
+    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!\n");
+    switch (type) {
+        case SCHEDULE_REQUEST_FAMILY:
+            telegramBot.sendMessage("FAMILY free time slots found!\n");
+            break;
+        case SCHEDULE_REQUEST_SINGLE:
+            telegramBot.sendMessage("SINGLE free time slots found!\n");
+            break;
+            
+    }
+    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!\n");
 }
 
 }
