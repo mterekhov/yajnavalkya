@@ -138,21 +138,21 @@ void YVScheduleService::checkFamilySchedule() {
 
 void YVScheduleService::timeSlotsFoundNotification(const EScheduleRequestType type) {
     YVTools::vidyaInfo("\t\tsingle free time slots found!\n");
-    telegramBot.sendMessage("ACHTUNG!!!\n");
-    telegramBot.sendMessage("ACHTUNG!!!\n");
-    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!");
+    telegramBot.sendMessage("ACHTUNG!!!");
+    telegramBot.sendMessage("ACHTUNG!!!");
     switch (type) {
         case SCHEDULE_REQUEST_FAMILY:
-            telegramBot.sendMessage("FAMILY free time slots found!\n");
+            telegramBot.sendMessage("FAMILY free time slots found!");
             break;
         case SCHEDULE_REQUEST_SINGLE:
-            telegramBot.sendMessage("SINGLE free time slots found!\n");
+            telegramBot.sendMessage("SINGLE free time slots found!");
             break;
             
     }
-    telegramBot.sendMessage("ACHTUNG!!!\n");
-    telegramBot.sendMessage("ACHTUNG!!!\n");
-    telegramBot.sendMessage("ACHTUNG!!!\n");
+    telegramBot.sendMessage("ACHTUNG!!!");
+    telegramBot.sendMessage("ACHTUNG!!!");
+    telegramBot.sendMessage("ACHTUNG!!!");
 }
 
 }
