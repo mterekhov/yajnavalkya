@@ -32,7 +32,7 @@ bool YVContentChecker::checkStep_02(const std::string& response) {
 /// Check that the content of agreement page contains agreement itself
 /// - Parameter response: true in case everything is ok
 bool YVContentChecker::checkStep_03(const std::string& response) {
-    if (response.find("National Police Force") == std::string::npos) {
+    if (response.find("Through this privacy and data protection policy") == std::string::npos) {
         return false;
     }
     
